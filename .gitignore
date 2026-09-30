@@ -1,0 +1,12 @@
+build/
+*.xcuserstate
+xcuserdata/
+*.mobileprovision
+.env
+.env.*
+.DS_Store
+.agent-logs/
+Screenshot*.png
+CallHistory.storedata*
+*.logarchive
+*.tar
