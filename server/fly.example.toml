@@ -1,7 +1,7 @@
 # Fly.io app for the lookup server, London region.
 # COST: shared-cpu-1x 256 MB is ~$2.50/month if always on; with auto-suspend it is billed only
 # while running (woken by lookups); a suspended machine costs storage only. Volume 13 GB ≈ $1.95/month (~$0.15/GB), billed always.
-app = "scamblocker-lookup"
+app = "<your-app>"   # copy to fly.toml and set your Fly app name; fly.toml is git-ignored
 primary_region = "lhr"
 
 [build]

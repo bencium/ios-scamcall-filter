@@ -1,7 +1,7 @@
 #!/bin/sh
 # Upload a built lookup database to the Fly volume and start (or restart) the server on it.
 #
-#   scripts/lookup/upload_db.sh DBDIR [APP]        (APP defaults to scamblocker-lookup)
+#   scripts/lookup/upload_db.sh DBDIR [APP]        (APP defaults to FLY_APP in .env)
 #
 # The database is ~11 GB for 60M numbers and barely compresses, and flyctl's tunnel runs at
 # roughly 2 MB/s, so this takes over an hour. It goes up in 16 independent tar parts; each is
@@ -11,7 +11,9 @@
 # /data/incoming and replace the live set only once every part has arrived.
 # Avoid other `fly ssh` sessions to the app while this runs; they can drop the transfer.
 set -eu
-DB=$1; APP=${2:-scamblocker-lookup}
+DB=$1
+APP=${2:-$(sed -n 's/^FLY_APP=//p' "$(dirname "$0")/../../.env" 2>/dev/null)}
+[ -n "$APP" ] || { echo "Give the Fly app name, or set FLY_APP in .env"; exit 1; }
 PARTS=16
 WORK=$(mktemp -d /tmp/lookup-upload.XXXXXX)
 trap 'rm -rf "$WORK"' EXIT

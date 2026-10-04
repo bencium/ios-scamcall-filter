@@ -480,7 +480,7 @@ The user shared an alternative plan: generate the list from editable prefix rule
 
 ### Live on Fly.io (4 October 2026, afternoon)
 
-- App `scamblocker-lookup`, London, shared-cpu-1x 256 MB, 13 GB volume. Deployed with `fly deploy --remote-only`. The changes were still uncommitted at deploy time, against the user's pre-deploy rule.
+- A Fly app in London, shared-cpu-1x 256 MB, 13 GB volume. Deployed with `fly deploy --remote-only`. The changes were still uncommitted at deploy time, against the user's pre-deploy rule.
 - **Upload:** flyctl's tunnel managed about 1.6 to 1.8 MB/s, against the Mac's measured 204 Mbps upload. One connection drop happened during part 4, most likely caused by parallel `fly ssh` sessions. `upload_db.sh` was then made resumable. All 16,386 files arrived and the byte total of the first three parts matched locally. The upload took about 1 h 25 min.
 - **Live check:** 162 numbers that must be blocked and 7 that must be allowed, all correct. A wrong token got 401. Server memory 67 MB of 207 MB usable. (evidence: `check_db.sh` against the live URL, 13:24)
 - **One large request is a problem on this CPU.** 169 lookups in one request kept the single shared CPU busy past the 5 s health check, and Fly stopped routing for a while. The checker now sends 10 per request. The phone sends one number per call.

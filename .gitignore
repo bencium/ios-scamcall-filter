@@ -25,3 +25,6 @@ phone-summary*.json
 metrics*.csv
 *.log
 __pycache__/
+# Personal deployment values: generated from .env, or your own Fly app.
+server/fly.toml
+Lookup/Info.plist

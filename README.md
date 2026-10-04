@@ -75,6 +75,13 @@ The full engineering record is in [BUILD-HISTORY-AND-HANDOVER.md](BUILD-HISTORY-
 - A number saved in your contacts, or one you have called, overrides the block.
 - To stop blocking, turn off every **084x Blocker** switch in Settings > Apps > Phone > Call Blocking & Identification.
 
+## Keeping your own settings private
+
+You can run your own deployment from a clone of this public repository without publishing anything personal:
+
+- **Your values live only in git-ignored files.** `.env` holds your team ID, server address, Fly app name, token and dashboard password. `private/` holds your call-history copies and notes. `server/fly.toml` holds your Fly app; start it from `server/fly.example.toml`. `Lookup/Info.plist` and `Shared/LookupSecrets.swift` are generated from `.env`.
+- **Install the privacy guard once per clone:** `scripts/privacy_guard.sh --install`. Every commit and push is then blocked if it adds a value from `.env`, a pattern from `private/guard-patterns.txt`, or a file that must never be committed. Put your own patterns in that file, such as your computer's name or phone numbers, one regular expression per line. It is git-ignored, so the patterns stay private too.
+
 ## Privacy
 
 - The app asks for no permissions. The app and the six 0845 parts make no network requests.
@@ -84,7 +91,7 @@ The full engineering record is in [BUILD-HISTORY-AND-HANDOVER.md](BUILD-HISTORY-
 
 ## Server lookup for 0843, 0844 and 0870–0873
 
-**Status, 4 October 2026.** The server runs on Fly.io in London at `https://scamblocker-lookup.fly.dev` and passes the full number check. The list is generated straight from the prefixes: every number, allocated or not, with no reputation or allocation data. iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
+**Status, 4 October 2026.** The server runs on Fly.io in London and passes the full number check. The list is generated straight from the prefixes: every number, allocated or not, with no reputation or allocation data. iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
 
 How it works:
 
@@ -144,21 +151,22 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    scripts/lookup/check_db.sh /tmp/lookup-db/db 0843 0844 0870 0871 0872 0873
    ```
    It must end with `ALL CORRECT`. It asks about the first, last and 25 random numbers of each prefix, and about the numbers just outside each prefix, which must stay allowed.
-4. **Create the Fly app** from the `server` folder:
+4. **Create the Fly app** from the `server` folder. Pick your own app name; it becomes `https://<your-app>.fly.dev`:
    ```sh
    cd server
-   fly apps create scamblocker-lookup
+   cp fly.example.toml fly.toml        # then set app = "<your-app>" in fly.toml (git-ignored)
+   fly apps create <your-app>
    fly volumes create pirdata --region lhr --size 13
    fly secrets set LOOKUP_TOKEN="$(openssl rand -base64 33)"
    fly deploy --detach
    ```
-   Copy the same token into `.env` as `LOOKUP_TOKEN`, and set `LOOKUP_URL=https://scamblocker-lookup.fly.dev`. The server waits for its database instead of crashing.
+   Copy the same token into `.env` as `LOOKUP_TOKEN`, and set `LOOKUP_URL=https://<your-app>.fly.dev` and `FLY_APP=<your-app>`. The server waits for its database instead of crashing.
 5. **Upload the database:** `scripts/lookup/upload_db.sh /tmp/lookup-db/db`. It sends 16 parts and restarts the server. Fly's command-line tunnel managed about 2 MB/s, so this takes over an hour. If the connection drops, run it again and it resumes. Avoid other `fly ssh` sessions while it runs. Auto-stop only counts web traffic, so switch it off for the upload and back on afterwards:
    ```sh
    fly machine update <machine id> --autostop=off --skip-health-checks --yes    # before
    fly machine update <machine id> --autostop=suspend --skip-health-checks --yes   # after
    ```
-6. **Check the live server:** `SERVER_URL=https://scamblocker-lookup.fly.dev TOKEN=<your token> scripts/lookup/check_db.sh - 0843 0844 0870 0871 0872 0873`
+6. **Check the live server:** `SERVER_URL=https://<your-app>.fly.dev TOKEN=<your token> scripts/lookup/check_db.sh - 0843 0844 0870 0871 0872 0873`
 7. **Rebuild the app:** `python3 scripts/create_project.py`, then build and install as in the setup steps above.
 8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
@@ -214,7 +222,7 @@ A real-call test needs a caller presenting one of these numbers. Scam calls arri
 
 ### Metrics dashboard
 
-Open `https://scamblocker-lookup.fly.dev/dashboard`. The browser asks for a password: any user name, and `DASHBOARD_PASSWORD` from `.env` (also stored as a Fly secret). The page wakes the server if it is asleep.
+Open `https://<your-app>.fly.dev/dashboard`. The browser asks for a password: any user name, and `DASHBOARD_PASSWORD` from `.env` (also stored as a Fly secret). The page wakes the server if it is asleep.
 
 - **Server side, live:** lookups per day, response times, errors and restarts. The server never sees caller numbers, so its log holds none.
 - **Phone side, after each report run:** calls per day by outcome, calls per prefix, O2 "Suspected Spam" labels, the re-sign date, and a scrolling list of blocked numbers.

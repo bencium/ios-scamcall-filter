@@ -1,5 +1,5 @@
 // Usage: CheckLookup <server-url> <token> <usecase> <number> [<number> ...]
-//   e.g. CheckLookup https://scamblocker-lookup.fly.dev "$LOOKUP_TOKEN" \
+//   e.g. CheckLookup https://<your-app>.fly.dev "$LOOKUP_TOKEN" \
 //          uk.co.bencium.ScamBlocker.Lookup.block +448431234567 +447700900123
 //
 // Runs Apple's own test client (PIRServiceTesting) through a small local forwarder,
