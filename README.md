@@ -45,8 +45,8 @@ Then:
      build/Build/Products/Release-iphoneos/ScamBlocker.app
    ```
    On a free account, the first launch may say the developer is untrusted. Trust it in Settings > General > VPN & Device Management.
-6. **Switch the blocking on.** On the iPhone, go to Settings > Apps > Phone > Call Blocking & Identification. Turn on the six **0845 Blocker** parts **one at a time**, letting each finish loading before the next.
-7. **Confirm it loaded.** Open 0845 Blocker and tap **Check enabled parts**. All six should show "On · checked".
+6. **Switch the blocking on.** On the iPhone, go to Settings > Apps > Phone > Call Blocking & Identification. Turn on the six **084x Blocker — 0845 part** switches **one at a time**, letting each finish loading before the next.
+7. **Confirm it loaded.** Open **084x Blocker** and tap **Check enabled parts**. All six should show "On · checked".
 8. **Turn off Live Voicemail:** Settings > Apps > Phone > Live Voicemail. See the next section for why.
 9. **Delete old outgoing calls to 0845 numbers from Recents.** On iOS 26 a number you have called before overrides the block.
 
@@ -68,7 +68,7 @@ The full engineering record is in [BUILD-HISTORY-AND-HANDOVER.md](BUILD-HISTORY-
 - **More prefixes can't go on the phone with a free Apple account.** A free account allows 10 app identifiers, and each 10-million range needs six parts. The server lookup below covers 0843, 0844 and 0870 to 0873 instead, using one more identifier (8 of 10).
 - iOS decides what happens to a blocked call. Apple can change that behaviour in any update.
 - A number saved in your contacts, or one you have called, overrides the block.
-- To stop blocking, turn off the six parts in Settings > Apps > Phone > Call Blocking & Identification.
+- To stop blocking, turn off every **084x Blocker** switch in Settings > Apps > Phone > Call Blocking & Identification.
 
 ## Privacy
 
@@ -155,7 +155,7 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    ```
 6. **Check the live server:** `SERVER_URL=https://scamblocker-lookup.fly.dev TOKEN=<your token> scripts/lookup/check_db.sh - 0843 0844 0870 0871 0872 0873`
 7. **Rebuild the app:** `python3 scripts/create_project.py`, then build and install as in the setup steps above.
-8. **On the iPhone,** turn on **0845 Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
+8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
 To add or remove a prefix, rerun steps 1, 2, 3 and 5 with the new list. Update `serverPrefixes` in `Shared/BlockerPlan.swift` so the app shows it. Then tap **Refresh server data** in the app.
 
@@ -235,5 +235,5 @@ python3 scripts/fallback_0843_blocks.py          # optional: refresh the block l
 FALLBACK_0843=1 python3 scripts/create_project.py
 ```
 
-Then build, install and check the plan as in the setup steps. Turn on the six **0845 Blocker** parts and the three **0843 Blocker** parts one at a time. To return to the server lookup, run `python3 scripts/create_project.py` without the variable.
+Then build, install and check the plan as in the setup steps. Turn on the six **0845 part** switches and the three **0843 part** switches one at a time. To return to the server lookup, run `python3 scripts/create_project.py` without the variable.
 

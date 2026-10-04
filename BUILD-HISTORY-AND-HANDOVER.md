@@ -496,6 +496,13 @@ The user shared an alternative plan: generate the list from editable prefix rule
 - **Dashboard checks** (local, made-up data, Chrome): light and dark render, tooltips and crosshair, the status line, the scrolling list, and no sideways overflow at 390 px wide. Bugs found and fixed: unsorted log lines broke "last lookup"; a favicon 404 turned the status red; wide tables overflowed on phones.
 - **`scripts/resign.sh`**: the normal run reported nothing due. A forced run built with fresh profiles (to 11 October, 14:07) but the install failed because the phone had locked. The script now keeps `build/.install-pending` and retries the install on the next run. The phone still runs the earlier build, valid to 11 October, 13:50.
 
+### Rename, icon and small fixes (4 October 2026, late afternoon)
+
+- **The app is now called "084x Blocker".** That covers the home screen, the in-app title and the Settings switch names, such as "084x Blocker — 0845 part 1 of 6" and "084x Blocker — Server lookup (0843, 0844, 087x)". Bundle identifiers are unchanged, so switch states carry over. The icon is a simple brick wall, drawn by `scripts/make_icon.swift` (`wall`, `slash` or `cube`) into `App/Assets.xcassets`.
+- **Installed** with `FORCE=1 scripts/resign.sh` (phone plugged in). Every part is signed until 11 October, about 15:28.
+- **Fly "not starting"**: the machine was suspended, as designed, and woke in 0.27 s on request. The bare address returned an empty 404, which looked broken, so patch 0003 now redirects `/` to `/dashboard`.
+- **Report**: the first real run found only the `-wal` and `-shm` files in `private/`. The script fell through to the protected original and crashed. It now says which file is missing.
+
 ### Not yet verified
 
 1. **A real lookup from the phone.** The handshake worked (see above). No `/queries` request has arrived yet, because no unknown call has come in. The app's profile expires 11 October 2026.

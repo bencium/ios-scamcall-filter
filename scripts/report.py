@@ -73,17 +73,22 @@ def read_env():
 
 
 def find_history(given):
-    for candidate in [given, ROOT / "private/CallHistory.storedata", SYNCED]:
+    private = ROOT / "private"
+    for candidate in [given, private / "CallHistory.storedata", SYNCED]:
         if candidate is None:
             continue
         path = candidate / "CallHistory.storedata" if candidate.is_dir() else candidate
         try:
-            if path.exists():
+            with open(path, "rb"):
                 return path
+        except FileNotFoundError:
+            continue
         except PermissionError:
-            pass
+            continue        # the synced location needs Full Disk Access for the terminal
+    if any(private.glob("CallHistory.storedata-*")):
+        sys.exit(f"{private} has the -wal and -shm files but not CallHistory.storedata itself. Copy that file too.")
     sys.exit("No call history found. Copy CallHistory.storedata and its -wal and -shm files from\n"
-             f"{SYNCED.parent} into {ROOT / 'private'} (Finder: Cmd+Shift+G), or give --history.")
+             f"{SYNCED.parent} into {private} (Finder: Cmd+Shift+G), or give --history.")
 
 
 def read_calls(path, days):

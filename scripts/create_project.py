@@ -55,6 +55,11 @@ def source(path):
     return add(isa='PBXFileReference', lastKnownFileType='sourcecode.swift',
                path=path, sourceTree='<group>')
 
+def resources(refs):
+    return add(isa='PBXResourcesBuildPhase', buildActionMask=2147483647,
+               files=[add(isa='PBXBuildFile', fileRef=ref) for ref in refs],
+               runOnlyForDeploymentPostprocessing=0)
+
 def sources(refs):
     return add(isa='PBXSourcesBuildPhase', buildActionMask=2147483647,
                files=[add(isa='PBXBuildFile', fileRef=ref) for ref in refs],
@@ -65,6 +70,9 @@ app_refs = [source('App/ScamBlockerApp.swift'), source('App/BlockerView.swift'),
 directory_ref = source('Blocker/CallDirectoryHandler.swift')
 lookup_refs = [source('Lookup/LookupExtension.swift'), source('Shared/LookupSecrets.swift')]
 plan_refs = [source('Shared/BlockerPlan.swift'), source('Shared/FallbackBlocks.swift')]
+# The app icon lives in an asset catalog; scripts/make_icon.swift draws it.
+assets_ref = add(isa='PBXFileReference', lastKnownFileType='folder.assetcatalog',
+                 path='App/Assets.xcassets', sourceTree='<group>')
 fallback = setting('FALLBACK_0843') == '1'
 base_plist = {
     'CFBundleDevelopmentRegion': 'en', 'CFBundleExecutable': '$(EXECUTABLE_NAME)',
@@ -93,8 +101,10 @@ def extension(name, bundle, product_type, file_type, plist_path, plist, refs, em
     embeds.append(add(isa='PBXBuildFile', fileRef=product, settings={'ATTRIBUTES': ['RemoveHeadersOnCopy']}))
     return target
 
+APP_NAME = '084x Blocker'
+
 def display_name(part):
-    return f'0845 Blocker — Part {part} of 6' if part <= 6 else f'0843 Blocker — Part {part - 6} of 3'
+    return f'{APP_NAME} — 0845 part {part} of 6' if part <= 6 else f'{APP_NAME} — 0843 part {part - 6} of 3'
 
 def bundle_id(part):
     # Part 7 reuses the lookup extension's App ID so the fallback stays at 10 (BlockerPlan.id).
@@ -130,7 +140,7 @@ def add_lookup_extension():
         '}',
         '']))
     lookup_plist = {
-        'CFBundleDisplayName': '0845 Blocker — Server lookup (0843, 0844, 087x)',
+        'CFBundleDisplayName': f'{APP_NAME} — Server lookup (0843, 0844, 087x)',
         'EXAppExtensionAttributes': {'EXExtensionPointIdentifier': 'com.apple.live-lookup'},
     }
     host = lookup_url.removeprefix('https://')
@@ -155,17 +165,19 @@ embed_lookup = add(isa='PBXCopyFilesBuildPhase', buildActionMask=2147483647, dst
 app = add(isa='PBXNativeTarget', buildConfigurationList=configs({
     'PRODUCT_BUNDLE_IDENTIFIER': 'uk.co.bencium.ScamBlocker', 'INFOPLIST_FILE': 'App/Info.plist',
     'LD_RUNPATH_SEARCH_PATHS': '$(inherited) @executable_path/Frameworks',
-}), buildPhases=[sources(app_refs + plan_refs), embed_directory] + ([embed_lookup] if lookup_embeds else []), buildRules=[],
+    'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+}), buildPhases=[sources(app_refs + plan_refs), resources([assets_ref]), embed_directory]
+    + ([embed_lookup] if lookup_embeds else []), buildRules=[],
     dependencies=dependencies, name='ScamBlocker', productName='ScamBlocker',
     productReference=app_product, productType='com.apple.product-type.application')
 (root/'App/Info.plist').write_bytes(plistlib.dumps({
     key: value for key, value in base_plist.items() if key != 'CFBundlePackageType'
 } | {
-    'CFBundlePackageType': 'APPL', 'CFBundleDisplayName': '0845 Blocker',
+    'CFBundlePackageType': 'APPL', 'CFBundleDisplayName': APP_NAME,
     'UILaunchScreen': {}, 'UISupportedInterfaceOrientations': ['UIInterfaceOrientationPortrait'],
 }))
 product_group = add(isa='PBXGroup', children=products, name='Products', sourceTree='<group>')
-group = add(isa='PBXGroup', children=app_refs + [directory_ref] + plan_refs + lookup_refs + [product_group],
+group = add(isa='PBXGroup', children=app_refs + [assets_ref, directory_ref] + plan_refs + lookup_refs + [product_group],
             sourceTree='<group>')
 objects[project] = {
     'isa': 'PBXProject', 'attributes': {'LastUpgradeCheck': '2700'},

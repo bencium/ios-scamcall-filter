@@ -1,5 +1,5 @@
 diff --git a/Sources/PIRService/Application+build.swift b/Sources/PIRService/Application+build.swift
-index 7f25982..746916a 100644
+index 7f25982..257de9a 100644
 --- a/Sources/PIRService/Application+build.swift
 +++ b/Sources/PIRService/Application+build.swift
 @@ -51,13 +51,21 @@ func buildApplication(
@@ -26,12 +26,14 @@ index 7f25982..746916a 100644
      pirServiceController.addUnauthRoutes(to: router.group())
      let pirGroup = router.group()
      // The report endpoint lives in its own group so it inherits PrivacyPass authentication (when configured) but
-@@ -76,6 +84,10 @@ func buildApplication(
+@@ -76,6 +84,12 @@ func buildApplication(
      pirServiceController.addRoutes(to: pirGroup)
      reportController.addRoutes(to: reportGroup)
  
 +    if let dashboard {
 +        dashboard.addRoutes(to: router.group("dashboard"))
++        // The bare address shows nothing otherwise; send visitors to the (password-protected) dashboard.
++        router.get("/") { _, _ in Response(status: .found, headers: [.location: "/dashboard"]) }
 +    }
 +
      var application = Application(router: router, configuration: configuration)

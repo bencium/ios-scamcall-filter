@@ -38,7 +38,7 @@ struct BlockerView: View {
                     Text(BlockerPlan.usesServerLookup ? "Version 0.4 · server lookup" : "Version 0.4 · on-device fallback")
                 }
             }
-            .navigationTitle("0845 Blocker")
+            .navigationTitle("084x Blocker")
             .task {
                 await status.refresh()
                 if ProcessInfo.processInfo.arguments.contains("--check-enabled") {
@@ -70,7 +70,7 @@ struct BlockerView: View {
 
     private var stopSection: some View {
         Section("Stop blocking") {
-            Text("Turn off every 0845 Blocker and 0843 Blocker switch, and the Server lookup switch if present, in iOS settings to stop this app’s rules.")
+            Text("Turn off every 084x Blocker switch in iOS settings to stop this app’s rules.")
             Button("Open settings to disable") { status.settings() }
         }
     }
