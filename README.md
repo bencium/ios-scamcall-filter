@@ -77,7 +77,7 @@ The full engineering record is in [BUILD-HISTORY-AND-HANDOVER.md](BUILD-HISTORY-
 
 ## Keeping your own settings private
 
-You can run your own deployment from a clone of this public repository without publishing anything personal:
+You can run your own deployment from a clone of this public repository without publishing anything personal. Read [IMPORTANT.md](IMPORTANT.md) first.
 
 - **Your values live only in git-ignored files.** `.env` holds your team ID, server address, Fly app name, token and dashboard password. `private/` holds your call-history copies and notes. `server/fly.toml` holds your Fly app; start it from `server/fly.example.toml`. `Lookup/Info.plist` and `Shared/LookupSecrets.swift` are generated from `.env`.
 - **Install the privacy guard once per clone:** `scripts/privacy_guard.sh --install`. Every commit and push is then blocked if it adds a value from `.env`, a pattern from `private/guard-patterns.txt`, or a file that must never be committed. Put your own patterns in that file, such as your computer's name or phone numbers, one regular expression per line. It is git-ignored, so the patterns stay private too.
