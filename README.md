@@ -1,10 +1,13 @@
-# iOS scam call filter — block every 0845 number on your iPhone
+# iPhone scam call blocker: block whole number ranges, in any country
 
-A small private iPhone app that blocks **every** UK number starting with 0845: all 10 million of them. The 0845 list runs entirely on your phone. There is no tracking, and no access to your contacts or call history.
+A private iPhone app that blocks whole ranges of phone numbers, not one number at a time. **It's a global tool.** Its server takes any country's number ranges as patterns, so the same setup works wherever scam calls come from. There is no tracking, and no access to your contacts or call history.
 
-Version 0.4 adds an optional **server lookup** for 0843, 0844, 0870, 0871, 0872 and 0873 (another 60 million numbers). Those prefixes don't fit on a free Apple account, so a small private server answers for them. The server cannot see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
+This repository ships configured for UK scam ranges:
 
-**70 million numbers in total:** 10 million 0845 numbers on the phone and 60 million on your server. The server isn't limited to the UK, and it isn't limited to Fly.io: see [Other countries and other hosts](#other-countries-and-other-hosts).
+- **On the phone:** every 0845 number, all 10 million of them. This part works with no internet connection.
+- **On your own small server:** 0843, 0844, 0870, 0871, 0872 and 0873, another 60 million numbers. The server can't see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
+
+**70 million numbers in total.** To block other countries' ranges, or to run the server somewhere other than Fly.io, see [Other countries and other hosts](#other-countries-and-other-hosts). So far, real-call testing covers the UK 0845 list on the phone.
 
 Your carrier may already label these calls "Suspected Spam" and still put them through. iOS can only block numbers one at a time, not a whole prefix. This app works around that by handing iOS the complete range.
 
