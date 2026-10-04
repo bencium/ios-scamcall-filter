@@ -4,6 +4,8 @@ A small private iPhone app that blocks **every** UK number starting with 0845: a
 
 Version 0.4 adds an optional **server lookup** for 0843, 0844, 0870, 0871, 0872 and 0873 (another 60 million numbers). Those prefixes don't fit on a free Apple account, so a small private server answers for them. The server cannot see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
 
+**70 million numbers in total:** 10 million 0845 numbers on the phone and 60 million on your server. The server isn't limited to the UK, and it isn't limited to Fly.io: see [Other countries and other hosts](#other-countries-and-other-hosts).
+
 Your carrier may already label these calls "Suspected Spam" and still put them through. iOS can only block numbers one at a time, not a whole prefix. This app works around that by handing iOS the complete range.
 
 ## Quick start with Claude Code or Codex
@@ -158,6 +160,25 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
 8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
 To add or remove a prefix, rerun steps 1, 2, 3 and 5 with the new list. Update `serverPrefixes` in `Shared/BlockerPlan.swift` so the app shows it. Then tap **Refresh server data** in the app.
+
+### Other countries and other hosts
+
+**Any country's numbers.** The server matches full international numbers, so it isn't tied to the UK. Give the build script an international pattern in which each `x` is any digit. For example, `+1900xxxxxxx` covers 10 million US 900 numbers. UK prefixes like `0843` are shorthand for `+44843xxxxxxx`, and both can be mixed in one database:
+
+```sh
+scripts/lookup/build_db.sh /tmp/lookup-db 8192 0843 0844 +1900xxxxxxx
+```
+
+Each 10 million numbers adds about 1.8 GB of disk and no extra server memory. The on-phone 0845 list stays UK-only. Two limits apply. The coverage check and the sample-number check only understand UK prefixes for now. Blocking non-UK numbers hasn't been tested with real calls.
+
+**Any host that runs a container.** This repository deploys to Fly.io, but `server/Dockerfile` is a standard container. It should run on Oracle Cloud (its Always Free tier can be set up in London), Google Cloud, AWS or a home server. It needs:
+
+- HTTPS on its own hostname: no custom port, no path, and a valid certificate
+- a persistent disk of about 13 GB for the 60-million-number database
+- about 256 MB of memory
+- the `LOOKUP_TOKEN` and `DASHBOARD_PASSWORD` secrets as environment variables, and `SHARD_COUNT` set to the shard count you built
+
+Fly's sleep-when-idle mode is specific to Fly. On other hosts the server normally runs all the time. After moving, set `LOOKUP_URL` in `.env` to the new address and rebuild the app. Only Fly.io has been tested.
 
 ### Free trial with the Mac as the server
 

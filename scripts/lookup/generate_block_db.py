@@ -2,9 +2,11 @@
 
 Usage: generate_block_db.py OUTDIR PREFIX [PREFIX ...] [--limit N]
 
-Each PREFIX is a UK dialling prefix such as 0843. Every number 0843 xxx xxxx becomes
-the key "+44843xxxxxxx" with the one-byte value 0x01, which Live Caller ID Lookup reads
-as "block". Numbers that are absent from the database are not blocked, so only blocked
+Each PREFIX is either a UK dialling prefix such as 0843, or an international pattern in
+which every x stands for any digit, such as +1900xxxxxxx (any country). A UK prefix is
+shorthand for the pattern of its ten-digit numbers: 0843 means +44843xxxxxxx. Every number
+the pattern covers becomes a key with the one-byte value 0x01, which Live Caller ID Lookup
+reads as "block". Numbers that are absent from the database are not blocked, so only blocked
 numbers are written. Output is one binary protobuf KeywordDatabase per prefix
 (apple.swift_homomorphic_encryption.pir.v1), written in the wire format directly so
 no generated protobuf code is needed. --limit N writes only the first N numbers of
@@ -32,11 +34,20 @@ def row(keyword):
     body = b"\x0a" + varint(len(keyword)) + keyword + b"\x12" + varint(len(BLOCK)) + BLOCK
     return b"\x0a" + varint(len(body)) + body
 
+def pattern(prefix):
+    """The international pattern a prefix stands for, e.g. 0843 -> +44843xxxxxxx."""
+    if prefix.startswith("0") and prefix.isdigit() and len(prefix) <= NUMBER_DIGITS:
+        return "+44" + prefix[1:] + "x" * (NUMBER_DIGITS + 1 - len(prefix))
+    fixed = prefix.rstrip("x")
+    if prefix.startswith("+") and fixed[1:].isdigit() and len(prefix) > len(fixed) and len(prefix) <= 16:
+        return prefix
+    raise SystemExit(f"{prefix}: expected a UK prefix such as 0843 or a pattern such as +1900xxxxxxx")
+
+
 def write_prefix(outdir, prefix, limit):
-    if not (prefix.startswith("0") and prefix.isdigit() and len(prefix) < NUMBER_DIGITS + 1):
-        raise SystemExit(f"{prefix}: expected a UK prefix such as 0843")
-    international = "+44" + prefix[1:]
-    remaining = NUMBER_DIGITS + 1 - len(prefix)
+    full = pattern(prefix)
+    international = full.rstrip("x")
+    remaining = len(full) - len(international)
     count = 10 ** remaining if limit is None else min(limit, 10 ** remaining)
     path = outdir / f"{prefix}.binpb"
     with path.open("wb") as out:
