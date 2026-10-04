@@ -8,16 +8,18 @@ struct BlockerView: View {
         NavigationStack {
             Form {
                 Section("Block incoming 0845 calls") {
-                    Text("The full 0845 rule uses six smaller parts. All six must be enabled for the complete rule.")
-                    Text("This also blocks legitimate callers using 0845. Other prefixes and hidden numbers are not covered.")
+                    Text("The full 0845 rule uses six smaller parts stored on this phone. All six must be enabled for the complete rule.")
+                    if !BlockerPlan.usesServerLookup {
+                        Text("This fallback build also stores the 0843 number blocks Ofcom lists as allocated, in three more parts.")
+                    }
+                    Text("This also blocks legitimate callers using these numbers. Hidden numbers are not covered.")
                         .foregroundStyle(.secondary)
                 }
                 Section("Activation check") {
-                    Text("For this diagnostic, first enable only Parts 1 and 2, one at a time. Check those before enabling the remaining parts.")
                     Text(status.message).accessibilityIdentifier("blockerStatus")
                     ForEach(0..<BlockerPlan.partCount, id: \.self) { index in
                         HStack {
-                            Text("Part \(index + 1) of 6")
+                            Text(BlockerPlan.label(forPart: index + 1))
                             Spacer()
                             Text(status.enabled[index]
                                  ? (status.accepted[index] ? "On · checked" : "On") : "Off")
@@ -29,13 +31,11 @@ struct BlockerView: View {
                     Button("Check enabled parts") { Task { await status.reloadEnabled() } }
                         .disabled(!status.enabled.contains(true) || status.busy)
                 }
-                Section("Stop blocking") {
-                    Text("Turn off all six 0845 Blocker switches in iOS settings to stop this app’s rule.")
-                    Button("Open settings to disable") { status.settings() }
-                }
+                if BlockerPlan.usesServerLookup { serverLookupSection }
+                stopSection
                 Section("Private device test") {
-                    Text("No contacts, call history, microphone, or network access is requested. This app cannot identify scammers or count blocked calls.")
-                    Text("Version 0.3 · loading diagnostic")
+                    Text("No contacts, call history, or microphone access is requested. The 0845 parts never use the network. The server lookup sends only an encrypted query to your own server.")
+                    Text(BlockerPlan.usesServerLookup ? "Version 0.4 · server lookup" : "Version 0.4 · on-device fallback")
                 }
             }
             .navigationTitle("0845 Blocker")
@@ -48,6 +48,30 @@ struct BlockerView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await status.refresh() } }
             }
+        }
+    }
+
+    private var serverLookupSection: some View {
+        Section("Server lookup (\(BlockerPlan.serverPrefixes.joined(separator: ", ")))") {
+            Text("Calls from these prefixes are checked against your private server as they arrive. The server cannot see which number called.")
+            HStack {
+                Text("Server lookup")
+                Spacer()
+                Text(status.lookupEnabled ? "On" : "Off")
+                    .foregroundStyle(status.lookupEnabled ? .primary : .secondary)
+            }
+            Text("Needs mobile data at the moment of the call and adds a short delay before unknown callers ring. Calls from your contacts are not affected.")
+                .foregroundStyle(.secondary)
+            Button("Open lookup settings") { Task { await status.lookupSettings() } }
+            Button("Refresh server data") { Task { await status.refreshLookup() } }
+                .disabled(!status.lookupEnabled || status.busy)
+        }
+    }
+
+    private var stopSection: some View {
+        Section("Stop blocking") {
+            Text("Turn off every 0845 Blocker and 0843 Blocker switch, and the Server lookup switch if present, in iOS settings to stop this app’s rules.")
+            Button("Open settings to disable") { status.settings() }
         }
     }
 }

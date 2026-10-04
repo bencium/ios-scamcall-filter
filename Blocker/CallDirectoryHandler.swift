@@ -8,21 +8,23 @@ final class CallDirectoryHandler: CXCallDirectoryProvider, CXCallDirectoryExtens
     override func beginRequest(with context: CXCallDirectoryExtensionContext) {
         context.delegate = self
         guard let part = Bundle.main.object(forInfoDictionaryKey: "BlockerPart") as? Int,
-              let range = BlockerPlan.range(forPart: part) else {
+              let ranges = BlockerPlan.ranges(forPart: part) else {
             context.cancelRequest(withError: NSError(domain: "ScamBlocker.Configuration", code: 1))
             return
         }
         if context.isIncremental { context.removeAllBlockingEntries() }
-        // Exactly two million failed on this device; stay below that boundary.
-        var next: CXCallDirectoryPhoneNumber = range.lowerBound
-        let end = range.upperBound
-        logger.notice("Submitting part \(part, privacy: .public); count=\(range.count, privacy: .public)")
-        while next < end {
-            autoreleasepool {
-                let batchEnd = min(next + 10_000, end)
-                while next < batchEnd {
-                    context.addBlockingEntry(withNextSequentialPhoneNumber: next)
-                    next += 1
+        // Exactly two million failed on this device; every part stays below that boundary.
+        let count = ranges.reduce(0) { $0 + $1.count }
+        logger.notice("Submitting part \(part, privacy: .public); count=\(count, privacy: .public)")
+        for range in ranges {
+            var next = range.lowerBound
+            while next < range.upperBound {
+                autoreleasepool {
+                    let batchEnd = min(next + 10_000, range.upperBound)
+                    while next < batchEnd {
+                        context.addBlockingEntry(withNextSequentialPhoneNumber: next)
+                        next += 1
+                    }
                 }
             }
         }

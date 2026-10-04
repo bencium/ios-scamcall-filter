@@ -1,14 +1,17 @@
 import CallKit
 import Foundation
+import IdentityLookup
 import OSLog
 
 @MainActor
 final class BlockerStatus: ObservableObject {
     @Published var enabled = Array(repeating: false, count: BlockerPlan.partCount)
     @Published var accepted = Array(repeating: false, count: BlockerPlan.partCount)
+    @Published var lookupEnabled = false
     @Published var busy = false
     @Published var message = "Checking the iOS switches…"
     private let logger = Logger(subsystem: "uk.co.bencium.ScamBlocker", category: "Status")
+    private let lookup = LiveCallerIDLookupManager.shared
 
     func refresh() async {
         guard !busy else { return }
@@ -27,6 +30,10 @@ final class BlockerStatus: ObservableObject {
         }
         enabled = states
         for index in states.indices where !states[index] { accepted[index] = false }
+        if BlockerPlan.usesServerLookup {
+            lookupEnabled = lookup.status(forExtensionWithIdentifier: BlockerPlan.lookupID) == .enabled
+            logger.notice("Server lookup enabled=\(self.lookupEnabled, privacy: .public)")
+        }
         if failed {
             message = "Could not read all switches. Full coverage is NOT confirmed."
         } else {
@@ -35,14 +42,16 @@ final class BlockerStatus: ObservableObject {
     }
 
     private func updateSummary() {
+        let total = BlockerPlan.partCount
         let onCount = enabled.filter { $0 }.count
         let checkedCount = zip(enabled, accepted).filter { $0 && $1 }.count
-        if checkedCount == BlockerPlan.partCount {
-            message = "iOS accepted all six parts and all switches are on. The full 0845 rule is loaded. A real call test is still needed."
-        } else if onCount == BlockerPlan.partCount {
-            message = "All six switches are on. Tap Check enabled parts to verify the full list."
+        let lookupText = !BlockerPlan.usesServerLookup ? "" : lookupEnabled ? " Server lookup is on." : " Server lookup is OFF."
+        if checkedCount == total {
+            message = "iOS accepted all \(total) parts and all switches are on.\(lookupText) A real call test is still needed."
+        } else if onCount == total {
+            message = "All \(total) switches are on. Tap Check enabled parts to verify the full list.\(lookupText)"
         } else {
-            message = "\(onCount) of 6 parts enabled; \(checkedCount) checked. The full 0845 range is NOT active."
+            message = "\(onCount) of \(total) parts enabled; \(checkedCount) checked. The full list is NOT active.\(lookupText)"
         }
     }
 
@@ -75,6 +84,29 @@ final class BlockerStatus: ObservableObject {
         await refresh()
     }
 
+    /// Makes iOS re-read the server address and token, then fetch fresh lookup parameters.
+    /// Needed after the server database changes or the URL or token in .env changes.
+    func refreshLookup() async {
+        guard !busy else { return }
+        busy = true
+        message = "Refreshing the server lookup. Keep this screen open."
+        do {
+            if #available(iOS 18.1, *) {
+                try await lookup.refreshExtensionContext(forExtensionWithIdentifier: BlockerPlan.lookupID)
+            }
+            try await lookup.refreshPIRParameters(forExtensionWithIdentifier: BlockerPlan.lookupID)
+            logger.notice("Server lookup refreshed")
+        } catch {
+            let error = error as NSError
+            busy = false
+            message = "Server lookup refresh failed: \(error.localizedDescription) (code \(error.code))."
+            logger.error("Server lookup refresh failed: \(error.domain, privacy: .public) code=\(error.code, privacy: .public)")
+            return
+        }
+        busy = false
+        await refresh()
+    }
+
     func settings() {
         CXCallDirectoryManager.sharedInstance.openSettings { error in
             if let error {
@@ -82,6 +114,14 @@ final class BlockerStatus: ObservableObject {
                     self.message = "Open Settings > Apps > Phone > Call Blocking & Identification. \(error.localizedDescription)"
                 }
             }
+        }
+    }
+
+    func lookupSettings() async {
+        do {
+            try await lookup.openSettings()
+        } catch {
+            message = "Open Settings > Apps > Phone > Call Blocking & Identification. \(error.localizedDescription)"
         }
     }
 }

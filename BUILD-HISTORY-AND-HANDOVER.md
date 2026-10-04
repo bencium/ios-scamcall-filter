@@ -1,12 +1,12 @@
 # 0845 Blocker — build history and technical handover
 
-Last updated: 29 September 2026. Incident times below use Europe/London time.
+Last updated: 4 October 2026 (section 15 added). Sections 1–14 date from 29 September 2026. Incident times below use Europe/London time.
 
 ## 1. Current result
 
 We built, signed and installed a private iPhone app that submits the complete standard UK 0845 number range to Apple's Call Directory system through six extensions. iOS accepted all six submissions on 28 September, and a later check on 29 September found all six switches enabled.
 
-**The user's requirement has not been demonstrated as working.** On 29 September the user reported an unwanted call from `0845 134 4592`. The phone's call signalling shows the caller was actually `0845 134 4582`. Both are in Part 1. The captured logs at that time show iOS choosing silencing and Live Voicemail rather than rejecting the call. No root cause or verified repair has been established.
+**The user's requirement has not been demonstrated as working.** On 29 September the user reported an unwanted call from `0845 xxx xxxx`. The phone's call signalling shows the caller was actually `0845 xxx xxxx`. Both are in Part 1. The captured logs at that time show iOS choosing silencing and Live Voicemail rather than rejecting the call. No root cause or verified repair has been established.
 
 **Evening update, 29 September.** A broader re-read of the same log archive shows two things. First, iOS 26's caller-scoring service most likely found this caller in our list (evidence (partly inferred): local log, see §10). Second, iOS still silenced the call instead of rejecting it. A second iOS check logged "call allowed", which contradicts the first reading. The stored call-history record of the call can settle this; it has not yet been read. "Suspected Spam" was O2's network caller name, not an iOS or app label.
 
@@ -105,7 +105,7 @@ Apple describes roughly two million as an informal, undocumented limit that may 
 
 Every identifier starts with `uk.co.bencium.ScamBlocker`. Each extension's property list contains its own integer `BlockerPart` and the principal class `$(PRODUCT_MODULE_NAME).CallDirectoryHandler`.
 
-The actual caller, `08451344582`, normalizes to `448451344582`, which lies inside Part 1, at offset 1,344,582 from its start. The number originally reported, `…4592`, is also in Part 1. The source audit found no skipped number, gap, overlap, incorrect part identifier or boundary error affecting it. Source coverage does not establish a stored match at call time.
+The actual caller, `0845xxxxxxx`, normalizes to `44845xxxxxxx`, which lies inside Part 1, at well inside the part from its start. The number originally reported, the reported number, is also in Part 1. The source audit found no skipped number, gap, overlap, incorrect part identifier or boundary error affecting it. Source coverage does not establish a stored match at call time.
 
 ## 7. Source files and responsibilities
 
@@ -156,7 +156,7 @@ The commands below document the workflow. They have not all been rerun while wri
 
    ```sh
    xcrun swiftc -module-cache-path /tmp/scamblocker-swift-cache \
-     Shared/BlockerPlan.swift scripts/verify_plan.swift \
+     Shared/BlockerPlan.swift Shared/FallbackBlocks.swift scripts/verify_plan.swift \
      -o /tmp/scamblocker-verify-plan
    /tmp/scamblocker-verify-plan
    ```
@@ -223,9 +223,9 @@ Successful reload completion times on 28 September were Part 1 at 17:58:05, Part
 
 ## 10. The 29 September incident
 
-The user reported `0845 134 4592` at approximately 12:38; O2's call signalling on the phone shows `08451344582`. The user confirmed that they had neither saved it as a contact nor called it back. The initial question grouped ringing, vibration and an incoming-call screen together. When asked to distinguish them, the user was unsure which happened. Audible ringing must therefore not be treated as independently confirmed; the unwanted interruption remains the issue.
+The user reported `0845 xxx xxxx` at approximately 12:38; O2's call signalling on the phone shows `0845xxxxxxx`. The user confirmed that they had neither saved it as a contact nor called it back. The initial question grouped ringing, vibration and an incoming-call screen together. When asked to distinguish them, the user was unsure which happened. Audible ringing must therefore not be treated as independently confirmed; the unwanted interruption remains the issue.
 
-The call details displayed only **“Suspected spam”**, with no attribution to 0845 Blocker. The evening re-read established where that label came from: it is the caller name O2's network sent in the call signalling (`From: "Suspected Spam" <sip:08451344582@uk.pri.o2.com>`). iOS itself scored the call `spam risk: 0`.
+The call details displayed only **“Suspected spam”**, with no attribution to 0845 Blocker. The evening re-read established where that label came from: it is the caller name O2's network sent in the call signalling (`From: "Suspected Spam" <sip:0845xxxxxxx@uk.pri.o2.com>`). iOS itself scored the call `spam risk: 0`.
 
 The recovered phone archive contains an incoming cellular call at 12:38:48, matching the reported time. iOS redacted the caller handle and actual directory-match result, so the archive cannot independently confirm the caller's digits.
 
@@ -365,7 +365,7 @@ Resume in this order:
      - Check `ideviceinfo -q com.apple.mobile.backup -k WillEncrypt` first. Turning encryption on is a phone setting that the user makes, with their own password.
      - Then run `idevicebackup2 backup --full <path>`.
      - Decrypt only `Manifest.db` and `CallHistory.storedata`, using a throwaway script outside the repo.
-     - Also look in `Manifest.db` for a `Library/CallDirectory/` store. If one exists, query it for `448451344582` to see which part holds it.
+     - Also look in `Manifest.db` for a `Library/CallDirectory/` store. If one exists, query it for `44845xxxxxxx` to see which part holds it.
 2. **Get a screenshot of Settings > Apps > Phone** from the user, covering Screen Unknown Callers, Call Filtering, Live Voicemail, and Call Blocking & Identification.
 3. **Branch on the record:**
    - **Trust score is BlockedByThirdParty (with or without `blockedByExtension`).** The list works and iOS chose silencing. The app has no public way to change that. Present the settings options, for example turning off Live Voicemail, which affects every silenced caller. Wait for the user's decision. Offer an Apple Feedback report; it is outward-facing and needs explicit approval.
@@ -411,3 +411,92 @@ No verified fix, Apple bug-report submission, external support message, new dist
 - [Apple: Live Voicemail](https://support.apple.com/en-gb/guide/iphone/iph3c99490e/26/ios/26).
 - [Apple: Live Caller ID Lookup](https://developer.apple.com/documentation/identitylookup/getting-up-to-date-calling-and-blocking-information-for-your-app).
 - [Apple: developer account information](https://developer.apple.com/help/account/basics/about-your-developer-account).
+
+## 15. October 2026: server lookup for 0843, 0844 and 0870–0873
+
+### Decisions (3 October 2026)
+
+- The user wants full filtering of 0845, 0843 and the other UK service-number prefixes, and will not pay for an Apple Developer Program membership.
+- 0845 stays on the phone at the full 10 million in the six proven parts. Nothing about them changed.
+- 0843, 0844, 0870, 0871, 0872 and 0873 (60 million numbers) are answered by a private Live Caller ID Lookup server on Fly.io, London region, using the user's existing Fly account.
+- Free hosts were ruled out. Vercel and Netlify run short-lived functions in Node, Go and similar runtimes, and Apple's server is a long-running Swift program. Fly has no free tier for new organisations.
+
+### Why a server
+
+- A free Apple account allows 10 app identifiers ([Apple](https://developer.apple.com/support/compare-memberships/)). Each 10-million range needs six parts below the roughly 2-million limit, so a second range cannot fit.
+- Apple's own engineer points developers who need more than about 2 million entries to Live Caller ID Lookup ([thread 796430](https://developer.apple.com/forums/thread/796430)).
+- Apple's server documentation says the Apple relay and onboarding form are skipped when the app is installed from Xcode (`Onboarding.md` in the example repository). Apple's engineer says a development-signed build is the only build type that works without the approved entitlement ([thread 763776](https://developer.apple.com/forums/thread/763776)).
+
+### What was built
+
+| Path | Purpose |
+|---|---|
+| `Lookup/LookupExtension.swift` | The lookup extension. It only tells iOS the server address and token. |
+| `Shared/LookupSecrets.swift` | Generated from `.env` (`LOOKUP_URL`, `LOOKUP_TOKEN`). Git-ignored. |
+| `scripts/create_project.py` | Adds the `Lookup` target as an ExtensionKit extension under `Extensions/`, with `EXExtensionPointIdentifier = com.apple.live-lookup`. Adds `NSPIRConfiguration` when the URL is a bare HTTPS host (required from iOS 27.3). |
+| `App/BlockerStatus.swift`, `App/BlockerView.swift` | Lookup switch status, settings button and a refresh button. The stale "enable Parts 1 and 2 first" line is gone. Version 0.4, build 4. |
+| `scripts/lookup/generate_block_db.py` | Writes every number of each prefix as `+44…` with the one-byte value 1, which means block. |
+| `scripts/lookup/build_db.sh` | Generates, shards (8,192), merges and processes the database, then writes the server config. |
+| `scripts/lookup/check_db.sh`, `scripts/lookup/checker/` | Starts the server and asks it about sample numbers with real encrypted queries, using Apple's own test client. |
+| `scripts/lookup/upload_db.sh` | Uploads the database to the Fly volume in 8 parts and restarts the server. |
+| `server/Dockerfile`, `server/entrypoint.sh`, `server/fly.toml` | The Fly app. Apple's server is built from commit `87e080a9` plus one patch. |
+| `server/patches/0001-load-shards-on-demand.patch` | Loads each shard from disk when a query needs it, keeping the 16 most recent in memory. |
+| `server/patches/0002-keep-keys-across-restarts.patch` | Adds `--state-directory`: the token-signing key and phones' evaluation keys are saved on disk. |
+
+### Findings while building
+
+- **Memory was the main obstacle.** Unpatched, Apple's server loads every shard at start-up and used about 1.35 MB per 4,800-number shard, about 1.9 times the file size. 60 million numbers would have needed about 17 GB of RAM. (evidence: local `footprint` on 150 shards, extrapolated)
+- **Loading one shard takes about 4 ms**, so loading on demand costs almost nothing per call. With the patch the server held all 60 million numbers in **91 MB**. (evidence: local start-up timing; `check_db.sh` run, 10:44 on 4 October)
+- **Apple's test suite passes with the patch**: 25 tests in 4 suites. One earlier failure was a timeout while 10 CPU cores were busy building the database. That test passed twice alone and in the later full run. (evidence: local `swift test`)
+- **The tool's built-in self-test is about 99% of processing time** (11.2 s with 5 trials, 0.1 s with none, identical size and parameters). The build therefore skips it and checks correctness with real queries instead.
+- **A fixed table size of 96 buckets** makes all 8,192 shards share one parameter set, so the phone downloads the compact config. 48, 56 and 64 buckets failed. The fullest shard is 86% full at 96.
+- **Denser encryption settings fail** in Apple's processing tool with "Data is corrupted HashBucketEntry buffer has less data than expected" (plaintext modulus 13, 16 or 17 bits). The default 5-bit setting is used.
+- **Correctness check, full database:** the first, a middle and the last number of each of the six prefixes returned BLOCK. `+44845xxxxxxx` (the 29 September caller, which stays on the phone), `+447700900123`, `+448000000000` and `+448429999999` returned "not in database". (evidence: local `check_db.sh`)
+- **Ofcom allocation data**, for context. Blocks listed in Ofcom's S8 file, out of 1,000 per prefix: 0843 609, 0844 577, 0870 842, 0871 554, 0872 547, 0873 0. 0873 has no allocations at all. The server still covers every number in each prefix, as the user asked.
+
+### Second opinion reviewed and on-device fallback (4 October 2026)
+
+The user shared an alternative plan: generate the list from editable prefix rules with no Ofcom or reputation data, prove free-account compatibility first, trial with the Mac as a £0 server, verify exact coverage, measure before buying hosting, and test against real-call acceptance criteria. The user also asked to keep the on-device allocated-only 0843 fallback.
+
+- **Already true:** the server list never used Ofcom data. `generate_block_db.py` writes every number of each prefix.
+- **Adopted:** `scripts/lookup/verify_coverage.py` checks all 60 million entries. Result: every number of all six prefixes present exactly once, none missing, no duplicates, nothing outside. A negative test with a doubled piece and a stray 0845 entry failed as expected. (evidence: local run)
+- **Adopted:** `check_db.sh` now asks about 25 random numbers per prefix plus the first and last, and checks the numbers just outside each prefix stay allowed. Result: 162 blocked, 7 allowed, all correct. A single lookup took about 157 ms, Mac as both client and server. (evidence: local run, 10:56)
+- **Adopted:** the Mac now serves the full database at `http://<mac-name>.local:8080` with token `BBBB` under `caffeinate -i`, as a free trial. This matches what the installed app points at. It was checked through that address, all correct. (evidence: local run, 10:57)
+- **Adopted:** the acceptance checklist and privacy notes in the README.
+- **Not adopted: a separate diagnostic app.** It would need two more App IDs, leaving no room for the fallback inside 10, and a free account allows 3 apps per device. The lookup extension inside the main app already serves as the diagnostic. Its signing worked on 4 October with the free Personal Team (evidence: local build log and `codesign`). Its profile carries only the application identifier, team and debugging entitlements.
+- **Open for the user:** the alternative listed only 0843 and 0845 on the server. The current server list is 0843, 0844 and 0870 to 0873, with 0845 on the phone, as chosen on 3 October.
+
+**Fallback mode.** `FALLBACK_0843=1 python3 scripts/create_project.py` builds the phone-only layout: six 0845 parts plus three parts holding the 567 Ofcom-allocated 0843 blocks (`Shared/FallbackBlocks.swift`, from the S8 file downloaded on 3 October). That is 1.89 million numbers per part, below the 1.99 million accepted in the v0.2 test, with no server part. Part 7 reuses the `Lookup` App ID, so the build has exactly 10. Checked: `verify_plan` passes and both layouts build unsigned. Not installed on the phone.
+
+### Fly deployment choices (4 October 2026)
+
+- **Phone handshake on the free account worked.** At 11:19:46 the phone fetched the token directory, tokens and config from the Mac trial server and uploaded its key, with no errors. No lookup had happened yet, because no unknown call had arrived. (evidence: trial server log)
+- **A restart broke lookups in Apple's version.** It creates a new random token-signing key on every start (`PrivacyPass.Issuer(privateKey: .init())`) and keeps phone keys in a memory-only store. In a restart test, the same client got "401 Unauthorized" after the restart. With patch 0002 and `--state-directory`, the same test returned correct answers. (evidence: local restart test, 11:26)
+- **Auto-stop, at the user's request.** The `fly.toml` settings are `auto_stop_machines = "stop"` and `min_machines_running = 0`, on a shared-cpu-1x 256 MB machine. The first call after a stop waits for boot. That delay is measured after deployment.
+- **Disk.** The database is 10.32 GiB. A 13 GB volume holds it plus one of 16 upload parts. The first 15 GB volume was destroyed while still empty.
+- **Cache.** 16 shards stay in memory, about 22 MB, down from 64.
+- **Apple's tests** pass with both patches: 25 tests in 4 suites. Both patches apply cleanly in order to upstream commit `87e080a`.
+- **Token.** A fresh 44-character token is in `.env` as `FLY_LOOKUP_TOKEN` and in Fly secrets as `LOOKUP_TOKEN`. The Mac trial still uses `BBBB`.
+
+### Live on Fly.io (4 October 2026, afternoon)
+
+- App `scamblocker-lookup`, London, shared-cpu-1x 256 MB, 13 GB volume. Deployed with `fly deploy --remote-only`. The changes were still uncommitted at deploy time, against the user's pre-deploy rule.
+- **Upload:** flyctl's tunnel managed about 1.6 to 1.8 MB/s, against the Mac's measured 204 Mbps upload. One connection drop happened during part 4, most likely caused by parallel `fly ssh` sessions. `upload_db.sh` was then made resumable. All 16,386 files arrived and the byte total of the first three parts matched locally. The upload took about 1 h 25 min.
+- **Live check:** 162 numbers that must be blocked and 7 that must be allowed, all correct. A wrong token got 401. Server memory 67 MB of 207 MB usable. (evidence: `check_db.sh` against the live URL, 13:24)
+- **One large request is a problem on this CPU.** 169 lookups in one request kept the single shared CPU busy past the 5 s health check, and Fly stopped routing for a while. The checker now sends 10 per request. The phone sends one number per call.
+- **Auto-stop versus suspend:** the first lookup after a full stop took 4,687 ms: boot 1.2 s, server start about 3 s. After suspend it took 945 ms, and 171 ms while awake. Keys survived both: the same client got correct answers without new setup. Auto-suspend is configured. (evidence: live tests, 13:37 and 13:45)
+- **Phone build pointing at Fly:** signed, not yet installed (phone unplugged). `.env` now holds the Fly values; the Mac trial values are noted in a comment. The Mac trial server still runs at `http://<mac-name>.local:8080` under `caffeinate` until the phone is switched.
+
+### Not yet verified
+
+1. **A real lookup from the phone.** The handshake worked (see above). No `/queries` request has arrived yet, because no unknown call has come in. The app's profile expires 11 October 2026.
+2. **A real call** from one of these prefixes being silenced.
+3. **The Fly deployment.** The Docker build has not run yet, because Docker Desktop wasn't running and the Fly CLI wasn't logged in. The patch has only been compiled on macOS so far.
+4. **What iOS does when the server is slow or unreachable.** This is not documented.
+
+### Resume in this order
+
+1. The user opens the app and confirms the six 0845 parts still show On after the v0.4 install. Then they turn on the lookup switch with the phone on the same Wi-Fi as the Mac, while the trial server runs from `/tmp/lookup-db/db` (log: `/tmp/lookup-trial-server.log`). Expect `/config`, `/issue`, `/key` requests in its log. If the switch never appears after a restart, the free account does not support the extension. Fallback: `FALLBACK_0843=1` (see above and README).
+2. The user runs `! fly auth login`. Then follow README "Server lookup", steps 3–7, with a fresh token.
+3. Run `check_db.sh`-style checks against the live URL, then rebuild the app with the live `.env` values and reinstall.
+4. Validate on real calls the same way as section 13, step 5. Also check that a contact still rings with no delay.

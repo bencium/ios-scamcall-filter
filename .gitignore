@@ -10,3 +10,17 @@ Screenshot*.png
 CallHistory.storedata*
 *.logarchive
 *.tar
+Shared/LookupSecrets.swift
+# Private call data: never commit call history copies, call reports, phone summaries,
+# server metrics downloads, phone/system logs or anything under private/.
+private/
+reports/
+*.storedata*
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+phone-summary*.json
+metrics*.csv
+*.log

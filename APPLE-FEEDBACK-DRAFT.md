@@ -24,7 +24,7 @@ iPhone 14, iOS 26.6.2 (23G90), O2 UK, VoLTE.
 
 **Steps**
 
-1. An incoming VoLTE call arrived on 29 September 2026 at 11:38:48 UTC from 08451344582, which is +44 845 134 4582. O2 delivered the number in national format in the SIP `From:` header, with display name "Suspected Spam".
+1. An incoming VoLTE call arrived on 29 September 2026 at 11:38:48 UTC from 0845xxxxxxx, which is +44 845 xxx xxxx. O2 delivered the number in national format in the SIP `From:` header, with display name "Suspected Spam".
 
 **Expected**
 
@@ -45,7 +45,7 @@ The call is rejected, as documented for Call Directory blocking entries. The Rec
    11:38:48.897 callservicesd shouldBlock: NO shouldSilence YES
    11:38:48.905 callservicesd simFocus: resolutionReason: =disabled, shouldAllowCall=1
    11:38:48.911 callservicesd Should we send to AnsweringMachine? shouldSendToLVM=YES shouldSendToReceptionist=NO ... hasSpamIdentifierInCarrierName=NO
-   11:38:49.309 CommCenter Session confirmed with "Suspected Spam" <sip:08451344582@uk.pri.o2.com;user=phone>
+   11:38:49.309 CommCenter Session confirmed with "Suspected Spam" <sip:0845xxxxxxx@uk.pri.o2.com;user=phone>
    ```
 4. About two seconds later, `callservicesd`'s own directory check disagreed with step 1, and recorded no blocking extension:
    ```

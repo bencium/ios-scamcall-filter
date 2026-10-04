@@ -1,0 +1,130 @@
+diff --git a/Sources/PIRService/Controllers/FilePersistDriver.swift b/Sources/PIRService/Controllers/FilePersistDriver.swift
+new file mode 100644
+index 0000000..cf93233
+--- /dev/null
++++ b/Sources/PIRService/Controllers/FilePersistDriver.swift
+@@ -0,0 +1,56 @@
++// Copyright 2026 bencium. Local addition to Apple's example service (Apache-2.0).
++import Crypto
++import Foundation
++import Hummingbird
++import ServiceLifecycle
++
++/// Stores each value as a file, so the evaluation keys phones upload survive a restart.
++///
++/// The example service keeps them in memory; after a restart every phone's next lookup fails
++/// until iOS notices and uploads its key again. File names are SHA-256 hashes of the keys.
++struct FilePersistDriver: PersistDriver {
++    private let directory: URL
++
++    init(directory: URL) throws {
++        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++        self.directory = directory
++    }
++
++    func run() async throws {
++        try? await gracefulShutdown()
++    }
++
++    func create<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
++        guard !FileManager.default.fileExists(atPath: path(for: key).path) else { throw PersistError.duplicate }
++        try await set(key: key, value: value, expires: expires)
++    }
++
++    func set<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
++        let expiry = expires.map { Date.now.addingTimeInterval(TimeInterval($0.components.seconds)) }
++        try JSONEncoder().encode(Entry(expires: expiry, value: value)).write(to: path(for: key), options: .atomic)
++    }
++
++    func get<Object: Codable & Sendable>(key: String, as _: Object.Type) async throws -> Object? {
++        guard let data = try? Data(contentsOf: path(for: key)) else { return nil }
++        let entry = try JSONDecoder().decode(Entry<Object>.self, from: data)
++        if let expires = entry.expires, expires < .now {
++            try await remove(key: key)
++            return nil
++        }
++        return entry.value
++    }
++
++    func remove(key: String) async throws {
++        try? FileManager.default.removeItem(at: path(for: key))
++    }
++
++    private func path(for key: String) -> URL {
++        let name = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
++        return directory.appendingPathComponent(name)
++    }
++
++    private struct Entry<Object: Codable>: Codable {
++        let expires: Date?
++        let value: Object
++    }
++}
+diff --git a/Sources/PIRService/Controllers/PrivacyPassState.swift b/Sources/PIRService/Controllers/PrivacyPassState.swift
+index 5079a15..d360d74 100644
+--- a/Sources/PIRService/Controllers/PrivacyPassState.swift
++++ b/Sources/PIRService/Controllers/PrivacyPassState.swift
+@@ -22,7 +22,26 @@ actor PrivacyPassState {
+     var verifiers: [UInt8: PrivacyPass.Verifier<InMemoryNonceStore>]
+ 
+     init() throws {
+-        let issuer = try PrivacyPass.Issuer(privateKey: .init())
++        try self.init(privateKey: .init())
++    }
++
++    /// Uses the token-signing key saved in `directory`, creating and saving one on first start.
++    /// A key that changes on every restart invalidates the tokens phones already hold.
++    init(keyDirectory directory: URL) throws {
++        let file = directory.appendingPathComponent("token-issuer-key.pem")
++        if let pem = try? String(contentsOf: file, encoding: .utf8) {
++            try self.init(privateKey: PrivacyPass.PrivateKey(pemRepresentation: pem))
++        } else {
++            let key = try PrivacyPass.PrivateKey()
++            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++            try key.pemRepresentation.write(to: file, atomically: true, encoding: .utf8)
++            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
++            try self.init(privateKey: key)
++        }
++    }
++
++    init(privateKey: PrivacyPass.PrivateKey) throws {
++        let issuer = try PrivacyPass.Issuer(privateKey: privateKey)
+         self.allowList = []
+         self.issuer = issuer
+         self.verifiers = [
+diff --git a/Sources/PIRService/main.swift b/Sources/PIRService/main.swift
+index 2cdc1ea..ea9c54c 100644
+--- a/Sources/PIRService/main.swift
++++ b/Sources/PIRService/main.swift
+@@ -26,16 +26,30 @@ struct ServerCommand: AsyncParsableCommand {
+     @Option var hostname: String = "127.0.0.1"
+     @Option var port: Int = 8080
+     @Argument var configFile: String
++    /// Directory for state that must survive restarts: the token-signing key and the
++    /// evaluation keys phones upload. Without it both live in memory only.
++    @Option var stateDirectory: String?
+ 
+     func run() async throws {
++        if let stateDirectory {
++            let directory = URL(fileURLWithPath: stateDirectory)
++            try await serve(
++                privacyPassState: PrivacyPassState(keyDirectory: directory),
++                evaluationKeyStore: FilePersistDriver(directory: directory.appendingPathComponent("evaluation-keys")))
++        } else {
++            try await serve(privacyPassState: PrivacyPassState(), evaluationKeyStore: MemoryPersistDriver())
++        }
++    }
++
++    func serve(privacyPassState: PrivacyPassState, evaluationKeyStore: some PersistDriver) async throws {
+         let usecaseStore = UsecaseStore()
+-        let privacyPassState = try PrivacyPassState()
+         let reportStore = ReportStore()
+ 
+         let app = try await buildApplication(
+             configuration: .init(address: .hostname(hostname, port: port)),
+             usecaseStore: usecaseStore,
+             privacyPassState: privacyPassState,
++            evaluationKeyStore: evaluationKeyStore,
+             reportStore: reportStore)
+ 
+         let reloadService = ReloadService(

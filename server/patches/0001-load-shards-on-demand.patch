@@ -1,0 +1,194 @@
+diff --git a/Sources/PIRService/Controllers/PirUsecase.swift b/Sources/PIRService/Controllers/PirUsecase.swift
+index 8cb7e6b..d18996d 100644
+--- a/Sources/PIRService/Controllers/PirUsecase.swift
++++ b/Sources/PIRService/Controllers/PirUsecase.swift
+@@ -47,11 +47,90 @@ extension SymmetricPirError: LocalizedError {
+     }
+ }
+ 
++/// Where a usecase's shard databases live.
++///
++/// `resident` keeps every shard in memory (the original behaviour, used by tests).
++/// `onDisk` reads a shard from disk only when a query asks for it, so memory stays flat
++/// however many numbers the database holds.
++enum ShardStore<PirScheme: IndexPirServer>: Sendable {
++    case resident([KeywordPirServer<PirScheme>])
++    case onDisk(ShardCache<PirScheme>)
++
++    func shard(_ index: Int) async throws -> KeywordPirServer<PirScheme> {
++        switch self {
++        case let .resident(shards):
++            guard shards.indices.contains(index) else {
++                throw HTTPError(.badRequest, message: "Shard index \(index) out of range")
++            }
++            return shards[index]
++        case let .onDisk(cache):
++            return try await cache.shard(index)
++        }
++    }
++}
++
++/// Loads shard databases on demand and keeps the most recently used ones in memory.
++actor ShardCache<PirScheme: IndexPirServer> {
++    typealias Scheme = PirScheme.Scheme
++    private let context: Context<Scheme>
++    private let fileStem: String
++    private let parameters: [Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters]
++    // Each loaded shard of ~7,000 numbers takes about 1.4 MB, so 16 shards cap this at ~22 MB,
++    // small enough for a 256 MB machine. A call needs one shard, and loading one takes milliseconds.
++    private let capacity: Int
++    private var loaded: [Int: KeywordPirServer<PirScheme>] = [:]
++    private var recentlyUsed: [Int] = []
++
++    init(context: Context<Scheme>, fileStem: String,
++         parameters: [Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters], capacity: Int = 16)
++    {
++        self.context = context
++        self.fileStem = fileStem
++        self.parameters = parameters
++        self.capacity = capacity
++    }
++
++    func shard(_ index: Int) throws -> KeywordPirServer<PirScheme> {
++        guard parameters.indices.contains(index) else {
++            throw HTTPError(.badRequest, message: "Shard index \(index) out of range")
++        }
++        if let shard = loaded[index] {
++            markUsed(index)
++            return shard
++        }
++        let shard = try load(index)
++        loaded[index] = shard
++        markUsed(index)
++        if recentlyUsed.count > capacity {
++            loaded[recentlyUsed.removeFirst()] = nil
++        }
++        return shard
++    }
++
++    private func markUsed(_ index: Int) {
++        recentlyUsed.removeAll { $0 == index }
++        recentlyUsed.append(index)
++    }
++
++    private func load(_ index: Int) throws -> KeywordPirServer<PirScheme> {
++        let pirParams = parameters[index]
++        let database = try ProcessedDatabase(from: "\(fileStem)-\(index).bin", context: context)
++        let processed = try ProcessedDatabaseWithParameters(
++            database: database,
++            algorithm: pirParams.algorithm.native(),
++            evaluationKeyConfig: pirParams.evaluationKeyConfig.native(),
++            pirParameter: pirParams.native(),
++            keywordPirParameter: pirParams.keywordPirParams.nativeWithSymmetricPirClientConfig())
++        return try KeywordPirServer(context: context, processed: processed)
++    }
++}
++
+ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+     typealias Scheme = PirScheme.Scheme
+     let context: Context<Scheme>
+     let keywordParams: KeywordPirParameter
+-    let shards: [KeywordPirServer<PirScheme>]
++    let shardParameters: [IndexPirParameter]
++    let shards: ShardStore<PirScheme>
+     let symmetricPirConfig: SymmetricPirConfig?
+ 
+     init(
+@@ -62,10 +141,12 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+     {
+         self.context = context
+         self.keywordParams = keywordParams
+-        self.shards = shards
++        self.shardParameters = shards.map(\.indexPirParameter)
++        self.shards = .resident(shards)
+         self.symmetricPirConfig = symmetricPirConfig
+     }
+ 
++    /// Reads every shard's small parameter file now and leaves the large database files on disk.
+     init(usecase: ServerConfiguration.Usecase) throws {
+         let parameterPath = "\(usecase.fileStem)-0.params.txtpb"
+         let params = try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters(from: parameterPath)
+@@ -74,7 +155,7 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+         self.context = context
+         self.keywordParams = try params.keywordPirParams.nativeWithSymmetricPirClientConfig()
+         self.symmetricPirConfig = try usecase.symmetricPirArguments?.resolve()
+-        self.shards = try (0..<usecase.shardCount).map { shardIndex in
++        let allParams = try (0..<usecase.shardCount).map { shardIndex in
+             let parameterPath = "\(usecase.fileStem)-\(shardIndex).params.txtpb"
+             let databasePath = "\(usecase.fileStem)-\(shardIndex).bin"
+             let pirParams = try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters(from: parameterPath)
+@@ -85,16 +166,13 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+                     got: encryptionParams,
+                     expected: context.encryptionParameters)
+             }
+-
+-            let database = try ProcessedDatabase(from: databasePath, context: context)
+-            let processed = try ProcessedDatabaseWithParameters(
+-                database: database,
+-                algorithm: pirParams.algorithm.native(),
+-                evaluationKeyConfig: pirParams.evaluationKeyConfig.native(),
+-                pirParameter: pirParams.native(),
+-                keywordPirParameter: pirParams.keywordPirParams.nativeWithSymmetricPirClientConfig())
+-            return try KeywordPirServer(context: context, processed: processed)
++            guard FileManager.default.fileExists(atPath: databasePath) else {
++                throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: databasePath])
++            }
++            return pirParams
+         }
++        self.shardParameters = allParams.map { $0.native() }
++        self.shards = .onDisk(ShardCache(context: context, fileStem: usecase.fileStem, parameters: allParams))
+     }
+ 
+     @_specialize(where PirScheme == MulPirServer<Bfv<UInt32>>)
+@@ -108,7 +186,7 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+         guard !pirRequest.hasShardID else {
+             throw HTTPError(.notImplemented, message: "overloading shard index with ShardID is not supported")
+         }
+-        let shard = shards[Int(pirRequest.shardIndex)]
++        let shard = try await shards.shard(Int(pirRequest.shardIndex))
+         let query: KeywordPirServer<PirScheme>.Query = try pirRequest.query.native(context: context)
+         let evaluationKey: EvaluationKey<Scheme> = try evaluationKey.evaluationKey.native(context: context)
+         let response = try shard.computeResponse(to: query, using: evaluationKey)
+@@ -120,27 +198,23 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+     func config() throws -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Config {
+         var pirConfig = Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig()
+         pirConfig.encryptionParameters = try context.encryptionParameters.proto()
+-        guard let firstShard = shards.first else {
++        guard let firstShard = shardParameters.first else {
+             throw HTTPError(.internalServerError, message: "Empty shards")
+         }
+ 
+         pirConfig.keywordPirParams = keywordParams.proto()
+         pirConfig.algorithm = .mulPir
+-        pirConfig.batchSize = UInt64(firstShard.indexPirParameter.batchSize)
++        pirConfig.batchSize = UInt64(firstShard.batchSize)
+         pirConfig.evaluationKeyConfigHash = try evaluationKeyConfig().sha256()
+-        pirConfig.shardConfigs = shards.map { shard in
+-            shard.indexPirParameter.proto()
+-        }
+-        let allShardsSame = shards.count > 1 && shards.dropFirst().allSatisfy { shard in
+-            shard.indexPirParameter == firstShard.indexPirParameter
+-        }
++        pirConfig.shardConfigs = shardParameters.map { $0.proto() }
++        let allShardsSame = shardParameters.count > 1 && shardParameters.dropFirst().allSatisfy { $0 == firstShard }
+         if allShardsSame {
+             pirConfig.pirShardConfigs = Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs
+                 .with { shardConfigs in
+                     shardConfigs.repeatedShardConfig = Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig
+                         .with { fixedShardConfig in
+-                            fixedShardConfig.shardCount = UInt32(shards.count)
+-                            fixedShardConfig.shardConfig = firstShard.indexPirParameter.proto()
++                            fixedShardConfig.shardCount = UInt32(shardParameters.count)
++                            fixedShardConfig.shardConfig = firstShard.proto()
+                         }
+                 }
+             pirConfig.shardConfigs = []
+@@ -153,7 +227,7 @@ struct PirUsecase<PirScheme: IndexPirServer>: Usecase {
+     }
+ 
+     func evaluationKeyConfig() throws -> Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig {
+-        try shards.map(\.evaluationKeyConfig).union().proto(encryptionParameters: context.encryptionParameters)
++        try shardParameters.map(\.evaluationKeyConfig).union().proto(encryptionParameters: context.encryptionParameters)
+     }
+ 
+     @_specialize(where PirScheme == MulPirServer<Bfv<UInt32>>)

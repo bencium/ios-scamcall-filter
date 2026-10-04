@@ -1,0 +1,37 @@
+# Fly.io app for the lookup server, London region.
+# COST: shared-cpu-1x 256 MB is ~$2.50/month if always on; with auto-suspend it is billed only
+# while running (woken by lookups); a suspended machine costs storage only. Volume 13 GB ≈ $1.95/month (~$0.15/GB), billed always.
+app = "scamblocker-lookup"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SHARD_COUNT = "8192"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Suspends when idle (memory snapshot) and resumes on the next request. Measured wake-up from a
+  # full stop was ~4.7 s, too slow to rely on before iOS rings; suspend resumes the running server.
+  # If Fly loses the snapshot it cold-starts instead; keys survive either way (patches/0002).
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/config"
+
+[mounts]
+  source = "pirdata"
+  destination = "/data"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "256mb"
