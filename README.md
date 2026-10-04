@@ -50,7 +50,7 @@ Then:
 8. **Turn off Live Voicemail:** Settings > Apps > Phone > Live Voicemail. See the next section for why.
 9. **Delete old outgoing calls to 0845 numbers from Recents.** On iOS 26 a number you have called before overrides the block.
 
-**Re-sign every 7 days.** On a free Apple account the app stops working 7 days after installing. Plug the phone in and repeat step 5.
+**Re-sign every 7 days.** On a free Apple account the app stops working 7 days after installing. Plug the phone in and run `scripts/resign.sh` (see [Weekly re-sign](#weekly-re-sign)).
 
 ## What we found on the way (iOS 26.6.2, iPhone 14, O2 UK)
 
@@ -187,6 +187,42 @@ A real-call test needs a caller presenting one of these numbers. Scam calls arri
 - Because the app is installed from Xcode, Apple's relay is not used. The server therefore sees the phone's internet address and the time of each lookup from an unknown caller.
 - The server logs only request type and path. Keep the token out of Git: it lives in `.env` and Fly secrets only.
 - Apple describes its example server as "just an example service and should not be run in production". This setup runs it for one person's phone, behind a token, with one reviewed patch.
+
+### Metrics dashboard
+
+Open `https://scamblocker-lookup.fly.dev/dashboard`. The browser asks for a password: any user name, and `DASHBOARD_PASSWORD` from `.env` (also stored as a Fly secret). The page wakes the server if it is asleep.
+
+- **Server side, live:** lookups per day, response times, errors and restarts. The server never sees caller numbers, so its log holds none.
+- **Phone side, after each report run:** calls per day by outcome, calls per prefix, O2 "Suspected Spam" labels, the re-sign date, and a scrolling list of blocked numbers.
+- The status line turns amber when the re-sign is due within two days or no lookup has arrived for three days, and red when the server logged an error in the last 24 hours.
+- The blocked-numbers list holds real caller numbers. Scammers often spoof other people's numbers, so keep the dashboard behind its password.
+
+### Call report
+
+```sh
+python3 scripts/report.py            # 7-day summary in the terminal
+python3 scripts/report.py --upload   # also update the dashboard
+```
+
+It reads a private copy of the call history that iCloud syncs to the Mac, never the live file. Copy `CallHistory.storedata` and its `-wal` and `-shm` files from `~/Library/Application Support/CallHistoryDB/` into `private/` (git-ignored; in Finder press Cmd+Shift+G). Alternatively give Terminal Full Disk Access and it reads them directly. Each incoming call gets one verdict:
+
+| Verdict | Meaning |
+|---|---|
+| Blocked by server | Blocked, on a server prefix; proven when the server logged a lookup within 30 seconds |
+| Blocked on phone | Blocked, on any other prefix (the 0845 list) |
+| Rang, unknown caller | Not a contact or a number you've called |
+| Rang, known caller | A contact or a number you've called |
+
+The upload contains counts, plus the numbers of blocked calls for the dashboard list. It never contains contacts, answered calls or names. Nothing is written into the repository.
+
+### Weekly re-sign
+
+```sh
+scripts/resign.sh            # re-signs only if a profile expires within 48 hours
+FORCE=1 scripts/resign.sh    # re-sign now
+```
+
+It moves expiring signing profiles to a backup folder (never deleting them) so Xcode issues fresh 7-day ones, rebuilds in whichever mode the project was last generated (normal or fallback), checks every part got a fresh week, and installs. The phone must be paired and unlocked. If the install fails, the next run retries it. It runs only when you start it.
 
 ### On-device fallback: allocated 0843 only
 

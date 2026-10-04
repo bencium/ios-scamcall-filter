@@ -1,0 +1,335 @@
+diff --git a/Sources/PIRService/Application+build.swift b/Sources/PIRService/Application+build.swift
+index 7f25982..746916a 100644
+--- a/Sources/PIRService/Application+build.swift
++++ b/Sources/PIRService/Application+build.swift
+@@ -51,13 +51,21 @@ func buildApplication(
+     usecaseStore: UsecaseStore = UsecaseStore(),
+     privacyPassState: PrivacyPassState? = nil,
+     evaluationKeyStore: some PersistDriver = MemoryPersistDriver(),
+-    reportStore: ReportStore = ReportStore()) async throws -> some ApplicationProtocol
++    reportStore: ReportStore = ReportStore(),
++    metrics: MetricsLog? = nil,
++    dashboard: DashboardController? = nil) async throws -> some ApplicationProtocol
+ {
+     let router = Router(context: AppContext.self)
+     router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: .none))
+     router.middlewares.add(LogErrorsMiddleware())
++    if let metrics {
++        router.middlewares.add(MetricsMiddleware(metrics: metrics))
++    }
+ 
+-    let pirServiceController = PIRServiceController(usecases: usecaseStore, evaluationKeyStore: evaluationKeyStore)
++    let pirServiceController = PIRServiceController(
++        usecases: usecaseStore,
++        evaluationKeyStore: evaluationKeyStore,
++        metrics: metrics)
+     pirServiceController.addUnauthRoutes(to: router.group())
+     let pirGroup = router.group()
+     // The report endpoint lives in its own group so it inherits PrivacyPass authentication (when configured) but
+@@ -76,6 +84,10 @@ func buildApplication(
+     pirServiceController.addRoutes(to: pirGroup)
+     reportController.addRoutes(to: reportGroup)
+ 
++    if let dashboard {
++        dashboard.addRoutes(to: router.group("dashboard"))
++    }
++
+     var application = Application(router: router, configuration: configuration)
+     application.addServices(evaluationKeyStore)
+ 
+diff --git a/Sources/PIRService/Controllers/DashboardController.swift b/Sources/PIRService/Controllers/DashboardController.swift
+new file mode 100644
+index 0000000..1e649a3
+--- /dev/null
++++ b/Sources/PIRService/Controllers/DashboardController.swift
+@@ -0,0 +1,82 @@
++// Local addition to Apple's example service (Apache-2.0): a password-protected metrics dashboard.
++import Foundation
++import Hummingbird
++import NIOCore
++
++/// Serves the dashboard page, the server's metrics CSV, and the phone summary that the Mac
++/// report uploads (counts only, never numbers). Every route needs HTTP Basic authentication
++/// with the dashboard password; the user name is ignored.
++struct DashboardController {
++    let metrics: MetricsLog
++    let password: String
++    let page: URL
++
++    func addRoutes(to group: RouterGroup<AppContext>) {
++        group
++            .get(use: page)
++            .get("server.csv", use: serverCSV)
++            .get("phone.json", use: phoneSummary)
++            .post("phone.json", use: storePhoneSummary)
++    }
++
++    func page(_ request: Request, context _: AppContext) async throws -> Response {
++        try authorize(request)
++        let html = try Data(contentsOf: page)
++        return respond(html, type: "text/html; charset=utf-8")
++    }
++
++    func serverCSV(_ request: Request, context _: AppContext) async throws -> Response {
++        try authorize(request)
++        return await respond(Data(metrics.allLines().utf8), type: "text/csv; charset=utf-8")
++    }
++
++    func phoneSummary(_ request: Request, context _: AppContext) async throws -> Response {
++        try authorize(request)
++        guard let summary = await metrics.phoneSummary() else {
++            throw HTTPError(.notFound, message: "No phone summary uploaded yet.")
++        }
++        return respond(summary, type: "application/json")
++    }
++
++    func storePhoneSummary(_ request: Request, context _: AppContext) async throws -> Response {
++        try authorize(request)
++        let body = Data(try await request.body.collect(upTo: 256 * 1024).readableBytesView)
++        guard (try? JSONSerialization.jsonObject(with: body)) is [String: Any] else {
++            throw HTTPError(.badRequest, message: "Expected a JSON object.")
++        }
++        try await metrics.store(phoneSummary: body)
++        return Response(status: .noContent)
++    }
++
++    private func authorize(_ request: Request) throws {
++        let unauthorized = HTTPError(
++            .unauthorized,
++            headers: [.wwwAuthenticate: "Basic realm=\"ScamBlocker dashboard\", charset=\"UTF-8\""])
++        guard let header = request.headers[.authorization], header.hasPrefix("Basic "),
++              let decoded = Data(base64Encoded: String(header.dropFirst(6))),
++              let credentials = String(data: decoded, encoding: .utf8),
++              let colon = credentials.firstIndex(of: ":")
++        else { throw unauthorized }
++        let given = Array(credentials[credentials.index(after: colon)...].utf8)
++        let expected = Array(password.utf8)
++        // Compare every byte so the time taken doesn't reveal how much of the password matched.
++        var difference = given.count ^ expected.count
++        for index in 0..<min(given.count, expected.count) {
++            difference |= Int(given[index] ^ expected[index])
++        }
++        guard difference == 0 else { throw unauthorized }
++    }
++
++    private func respond(_ data: Data, type: String) -> Response {
++        Response(
++            status: .ok,
++            headers: [
++                .contentType: type,
++                .cacheControl: "no-store",
++                .init("X-Content-Type-Options")!: "nosniff",
++                .init("Content-Security-Policy")!:
++                    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
++            ],
++            body: .init(byteBuffer: ByteBuffer(bytes: data)))
++    }
++}
+diff --git a/Sources/PIRService/Controllers/MetricsLog.swift b/Sources/PIRService/Controllers/MetricsLog.swift
+new file mode 100644
+index 0000000..5084258
+--- /dev/null
++++ b/Sources/PIRService/Controllers/MetricsLog.swift
+@@ -0,0 +1,105 @@
++// Local addition to Apple's example service (Apache-2.0): request metrics for the dashboard.
++import Foundation
++import Hummingbird
++
++/// Appends one CSV line per lookup, key upload, error and server start to a monthly file,
++/// and keeps the phone summary the Mac report uploads. The server never sees caller numbers,
++/// so none can be written here. Columns: time (UTC), event, detail, status, ms.
++actor MetricsLog {
++    static let header = "time,event,detail,status,ms"
++    private let directory: URL
++    private var phoneSummaryFile: URL { directory.appendingPathComponent("phone-summary.json") }
++
++    init(directory: URL) throws {
++        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++        self.directory = directory
++    }
++
++    func record(_ event: String, detail: String = "", status: String = "", ms: Int? = nil) {
++        let now = Date.now
++        let line = [now.formatted(.iso8601), event, detail, status, ms.map(String.init) ?? ""]
++            .joined(separator: ",") + "\n"
++        let file = directory.appendingPathComponent("server-\(Self.month(of: now)).csv")
++        guard FileManager.default.fileExists(atPath: file.path) else {
++            FileManager.default.createFile(atPath: file.path, contents: Data((Self.header + "\n" + line).utf8))
++            return
++        }
++        guard let handle = try? FileHandle(forWritingTo: file) else { return }
++        defer { try? handle.close() }
++        _ = try? handle.seekToEnd()
++        try? handle.write(contentsOf: Data(line.utf8))
++    }
++
++    /// Every monthly file joined into one CSV with a single header.
++    func allLines() -> String {
++        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
++        var csv = Self.header + "\n"
++        for name in names.filter({ $0.hasPrefix("server-") && $0.hasSuffix(".csv") }).sorted() {
++            guard let text = try? String(contentsOf: directory.appendingPathComponent(name), encoding: .utf8) else {
++                continue
++            }
++            csv += text.split(separator: "\n").dropFirst().map { $0 + "\n" }.joined()
++        }
++        return csv
++    }
++
++    func phoneSummary() -> Data? {
++        try? Data(contentsOf: phoneSummaryFile)
++    }
++
++    func store(phoneSummary: Data) throws {
++        try phoneSummary.write(to: phoneSummaryFile, options: .atomic)
++    }
++
++    private static func month(of date: Date) -> String {
++        var calendar = Calendar(identifier: .gregorian)
++        calendar.timeZone = TimeZone(identifier: "UTC")!
++        let parts = calendar.dateComponents([.year, .month], from: date)
++        return String(format: "%04d-%02d", parts.year ?? 0, parts.month ?? 0)
++    }
++}
++
++/// The endpoints the phone uses; requests to anything else are not recorded.
++let phoneEndpointPaths: Set<String> = [
++    "/queries", "/key", "/config", "/issue", "/token-key-for-user-token",
++    "/.well-known/private-token-issuer-directory",
++]
++
++/// Records failed requests and phone key uploads on the endpoints the phone uses. Successful
++/// lookups are recorded by the lookup handler, which knows which dataset was asked. Anything else,
++/// such as scanners probing random paths on the public address, is ignored.
++struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
++    let metrics: MetricsLog
++
++    func handle(
++        _ request: Request,
++        context: Context,
++        next: (Request, Context) async throws -> Response) async throws -> Response
++    {
++        let path = request.uri.path
++        guard phoneEndpointPaths.contains(path) else { return try await next(request, context) }
++        let started = ContinuousClock.now
++        let route = "\(request.method.rawValue) \(path)"
++        do {
++            let response = try await next(request, context)
++            let code = response.status.code
++            if code >= 400 {
++                await metrics.record("error", detail: route, status: "\(code)", ms: started.millisecondsSince)
++            } else if route == "POST /key" {
++                await metrics.record("key", status: "\(code)", ms: started.millisecondsSince)
++            }
++            return response
++        } catch {
++            let code = (error as? any HTTPResponseError)?.status.code ?? 500
++            await metrics.record("error", detail: route, status: "\(code)", ms: started.millisecondsSince)
++            throw error
++        }
++    }
++}
++
++extension ContinuousClock.Instant {
++    var millisecondsSince: Int {
++        let elapsed = duration(to: .now).components
++        return Int(elapsed.seconds * 1000 + elapsed.attoseconds / 1_000_000_000_000_000)
++    }
++}
+diff --git a/Sources/PIRService/Controllers/PIRServiceController.swift b/Sources/PIRService/Controllers/PIRServiceController.swift
+index dbc802b..c4c0afa 100644
+--- a/Sources/PIRService/Controllers/PIRServiceController.swift
++++ b/Sources/PIRService/Controllers/PIRServiceController.swift
+@@ -22,6 +22,8 @@ import Util
+ struct PIRServiceController {
+     let usecases: UsecaseStore
+     let evaluationKeyStore: PersistDriver
++    /// Local addition: when set, every lookup is recorded for the dashboard (dataset, duration, outcome).
++    var metrics: MetricsLog? = nil
+ 
+     static func persistKey(user: UserIdentifier, configHash: Data) -> String {
+         "\(user.identifier)/\(configHash.base64EncodedString())"
+@@ -149,9 +151,17 @@ struct PIRServiceController {
+             as: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Requests.self,
+             context: context)
+ 
++        var succeeded = false
+         defer {
+             let duration = Date.now.timeIntervalSince(startTime)
+             context.logger.info("usecase=\(requests.requests.map(\.usecase)), duration=\(duration * 1000)ms")
++            if let metrics {
++                // "block" or "identity": the last part of the dataset name. Never the caller's number.
++                let datasets = requests.requests.map { String($0.usecase.split(separator: ".").last ?? "") }
++                let status = succeeded ? "200" : "error"
++                Task { await metrics.record("lookup", detail: datasets.joined(separator: "+"), status: status,
++                                            ms: Int(duration * 1000)) }
++            }
+         }
+ 
+         let responsesSequence = requests.requests.async.map { request in
+@@ -195,6 +205,7 @@ struct PIRServiceController {
+             }
+         }
+         let responses: [Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Response] = try await .init(responsesSequence)
++        succeeded = true
+         return Protobuf(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Responses.with { apiResponses in
+             apiResponses.responses = responses
+         })
+diff --git a/Sources/PIRService/main.swift b/Sources/PIRService/main.swift
+index ea9c54c..60b0216 100644
+--- a/Sources/PIRService/main.swift
++++ b/Sources/PIRService/main.swift
+@@ -29,19 +29,39 @@ struct ServerCommand: AsyncParsableCommand {
+     /// Directory for state that must survive restarts: the token-signing key and the
+     /// evaluation keys phones upload. Without it both live in memory only.
+     @Option var stateDirectory: String?
++    /// Local addition: directory for the metrics log and the phone summary shown on the dashboard.
++    @Option var metricsDirectory: String?
++    /// Local addition: HTML file served at /dashboard. Needs --metrics-directory and the
++    /// DASHBOARD_PASSWORD environment variable; without the password the dashboard stays off.
++    @Option var dashboardPage: String?
+ 
+     func run() async throws {
++        let metrics = try metricsDirectory.map { try MetricsLog(directory: URL(fileURLWithPath: $0)) }
++        let password = ProcessInfo.processInfo.environment["DASHBOARD_PASSWORD"] ?? ""
++        var dashboard: DashboardController?
++        if let metrics, let dashboardPage, !password.isEmpty {
++            dashboard = DashboardController(metrics: metrics, password: password, page: URL(fileURLWithPath: dashboardPage))
++        }
++        await metrics?.record("start")
+         if let stateDirectory {
+             let directory = URL(fileURLWithPath: stateDirectory)
+             try await serve(
+                 privacyPassState: PrivacyPassState(keyDirectory: directory),
+-                evaluationKeyStore: FilePersistDriver(directory: directory.appendingPathComponent("evaluation-keys")))
++                evaluationKeyStore: FilePersistDriver(directory: directory.appendingPathComponent("evaluation-keys")),
++                metrics: metrics,
++                dashboard: dashboard)
+         } else {
+-            try await serve(privacyPassState: PrivacyPassState(), evaluationKeyStore: MemoryPersistDriver())
++            try await serve(privacyPassState: PrivacyPassState(), evaluationKeyStore: MemoryPersistDriver(),
++                            metrics: metrics, dashboard: dashboard)
+         }
+     }
+ 
+-    func serve(privacyPassState: PrivacyPassState, evaluationKeyStore: some PersistDriver) async throws {
++    func serve(
++        privacyPassState: PrivacyPassState,
++        evaluationKeyStore: some PersistDriver,
++        metrics: MetricsLog?,
++        dashboard: DashboardController?) async throws
++    {
+         let usecaseStore = UsecaseStore()
+         let reportStore = ReportStore()
+ 
+@@ -50,7 +70,9 @@ struct ServerCommand: AsyncParsableCommand {
+             usecaseStore: usecaseStore,
+             privacyPassState: privacyPassState,
+             evaluationKeyStore: evaluationKeyStore,
+-            reportStore: reportStore)
++            reportStore: reportStore,
++            metrics: metrics,
++            dashboard: dashboard)
+ 
+         let reloadService = ReloadService(
+             configFile: URL(fileURLWithPath: configFile),

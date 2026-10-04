@@ -487,6 +487,15 @@ The user shared an alternative plan: generate the list from editable prefix rule
 - **Auto-stop versus suspend:** the first lookup after a full stop took 4,687 ms: boot 1.2 s, server start about 3 s. After suspend it took 945 ms, and 171 ms while awake. Keys survived both: the same client got correct answers without new setup. Auto-suspend is configured. (evidence: live tests, 13:37 and 13:45)
 - **Phone build pointing at Fly:** signed, not yet installed (phone unplugged). `.env` now holds the Fly values; the Mac trial values are noted in a comment. The Mac trial server still runs at `http://<mac-name>.local:8080` under `caffeinate` until the phone is switched.
 
+### Metrics, dashboard and weekly re-sign (4 October 2026, afternoon)
+
+- **Patch 0003** adds `--metrics-directory` and `--dashboard-page`. The lookup handler logs one CSV line per lookup: time, `lookup`, dataset (`block`/`identity`), status, ms. A middleware logs failed requests and key uploads, but only on the endpoints the phone uses, so scanners probing the public address don't raise false alarms. `/dashboard`, `/dashboard/server.csv` and `/dashboard/phone.json` (GET and POST) need HTTP Basic auth with the `DASHBOARD_PASSWORD` secret. Apple's 25 tests pass with all three patches.
+- **`scripts/report.py`** reads a temporary copy of the synced call history and matches calls to server lookups within 30 seconds. It prints a 7-day summary and with `--upload` stores the summary on the volume. It was tested only on made-up data, because the terminal cannot read `~/Library/Application Support/CallHistoryDB` without Full Disk Access and no copy has been placed in `private/` yet. Column names follow the 29 September read; the script reports any missing column instead of failing.
+- **The blocked-numbers list** was requested by the user (4 October). It changes the earlier "numbers never leave the Mac" rule for blocked calls only. Contacts, answered calls and names are never uploaded.
+- **Footer copy** is the user's text, verbatim.
+- **Dashboard checks** (local, made-up data, Chrome): light and dark render, tooltips and crosshair, the status line, the scrolling list, and no sideways overflow at 390 px wide. Bugs found and fixed: unsorted log lines broke "last lookup"; a favicon 404 turned the status red; wide tables overflowed on phones.
+- **`scripts/resign.sh`**: the normal run reported nothing due. A forced run built with fresh profiles (to 11 October, 14:07) but the install failed because the phone had locked. The script now keeps `build/.install-pending` and retries the install on the next run. The phone still runs the earlier build, valid to 11 October, 13:50.
+
 ### Not yet verified
 
 1. **A real lookup from the phone.** The handshake worked (see above). No `/queries` request has arrived yet, because no unknown call has come in. The app's profile expires 11 October 2026.
