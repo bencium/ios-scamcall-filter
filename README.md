@@ -80,7 +80,7 @@ The full engineering record is in [BUILD-HISTORY-AND-HANDOVER.md](BUILD-HISTORY-
 You can run your own deployment from a clone of this public repository without publishing anything personal. Read [IMPORTANT.md](IMPORTANT.md) first.
 
 - **Your values live only in git-ignored files.** `.env` holds your team ID, server address, Fly app name, token and dashboard password. `private/` holds your call-history copies and notes. `server/fly.toml` holds your Fly app; start it from `server/fly.example.toml`. `Lookup/Info.plist` and `Shared/LookupSecrets.swift` are generated from `.env`.
-- **Install the privacy guard once per clone:** `scripts/privacy_guard.sh --install`. Every commit and push is then blocked if it adds a value from `.env`, a pattern from `private/guard-patterns.txt`, or a file that must never be committed. Put your own patterns in that file, such as your computer's name or phone numbers, one regular expression per line. It is git-ignored, so the patterns stay private too.
+- **The privacy guard installs itself** the first time you run `python3 scripts/create_project.py` in a clone. You can also install it with `scripts/privacy_guard.sh --install`. Every commit and push is then blocked if it adds a value from `.env`, a pattern from `private/guard-patterns.txt`, or a file that must never be committed. Put your own patterns in that file, such as your computer's name or phone numbers, one regular expression per line. It is git-ignored, so the patterns stay private too.
 
 ## Privacy
 
@@ -146,7 +146,7 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    python3 scripts/lookup/verify_coverage.py /tmp/lookup-db/merged 0843 0844 0870 0871 0872 0873
    ```
    It must end with `COVERAGE EXACT`.
-3. **Check it with real lookups.** This needs the patched server binary (apply `server/patches/*.patch` to a checkout of the example server and run `swift build -c release --product PIRService`) and the checker (`swift build -c release` in `scripts/lookup/checker`):
+3. **Check it with real lookups.** This needs the patched server binary (`server/dev.sh setup`, then `swift build -c release --product PIRService` in `server/upstream`) and the checker (`swift build -c release` in `scripts/lookup/checker`):
    ```sh
    scripts/lookup/check_db.sh /tmp/lookup-db/db 0843 0844 0870 0871 0872 0873
    ```
@@ -158,9 +158,8 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    fly apps create <your-app>
    fly volumes create pirdata --region lhr --size 13
    fly secrets set LOOKUP_TOKEN="$(openssl rand -base64 33)"
-   fly deploy --detach
    ```
-   Copy the same token into `.env` as `LOOKUP_TOKEN`, and set `LOOKUP_URL=https://<your-app>.fly.dev` and `FLY_APP=<your-app>`. The server waits for its database instead of crashing.
+   Copy the same token into `.env` as `LOOKUP_TOKEN`, and set `LOOKUP_URL=https://<your-app>.fly.dev` and `FLY_APP=<your-app>`. Then deploy from the top folder of the repository with `scripts/deploy.sh --detach`. The server waits for its database instead of crashing.
 5. **Upload the database:** `scripts/lookup/upload_db.sh /tmp/lookup-db/db`. It sends 16 parts and restarts the server. Fly's command-line tunnel managed about 2 MB/s, so this takes over an hour. If the connection drops, run it again and it resumes. Avoid other `fly ssh` sessions while it runs. Auto-stop only counts web traffic, so switch it off for the upload and back on afterwards:
    ```sh
    fly machine update <machine id> --autostop=off --skip-health-checks --yes    # before
@@ -171,6 +170,18 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
 8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
 To add or remove a prefix, rerun steps 1, 2, 3 and 5 with the new list. Update `serverPrefixes` in `Shared/BlockerPlan.swift` so the app shows it. Then tap **Refresh server data** in the app.
+
+### Changing and deploying the server
+
+The server's code is Apple's example server plus the patch files in `server/patches/`. To change it:
+
+```sh
+server/dev.sh setup     # Apple's code at the pinned commit, with the patches applied, in server/upstream (git-ignored)
+                        # then edit and commit in server/upstream, on the branch local-patches
+server/dev.sh save      # rewrites server/patches from those commits
+```
+
+Commit the patch files, then deploy with `scripts/deploy.sh`. It refuses unless you are on `main` with nothing uncommitted, the patches apply to Apple's pinned code and match `server/upstream`, and `server/fly.toml` names the same app as `FLY_APP` in `.env`. A Claude Code hook in `.claude/` stops an agent from running `fly deploy` directly.
 
 ### Other countries and other hosts
 
@@ -236,7 +247,13 @@ python3 scripts/report.py            # 7-day summary in the terminal
 python3 scripts/report.py --upload   # also update the dashboard
 ```
 
-It reads a private copy of the call history that iCloud syncs to the Mac, never the live file. Copy `CallHistory.storedata` and its `-wal` and `-shm` files from `~/Library/Application Support/CallHistoryDB/` into `private/` (git-ignored; in Finder press Cmd+Shift+G). Alternatively give Terminal Full Disk Access and it reads them directly. Each incoming call gets one verdict:
+It reads a private copy of the call history, never the live file, and its last line names the copy it used and its newest call. For a fresh copy, run `scripts/call_history.sh` with the phone plugged in. It backs up the phone and pulls only the call history out of the backup, into `private/backup-copy/` (git-ignored). It needs three things set up once:
+
+1. In Finder, select the iPhone and tick **Encrypt local backup**, with a password. iOS keeps call history only in encrypted backups. The first backup copies everything; later ones copy only what changed.
+2. Save that password in the Keychain. This asks for it, so it never shows on screen: `security add-generic-password -a "$USER" -s 084x-blocker-backup -w`
+3. In System Settings > Privacy & Security > Full Disk Access, turn on your terminal app, then quit and reopen it. This also lets the terminal read everything else on the Mac, such as Mail and Messages.
+
+Without a backup copy, the report falls back to the history iCloud syncs to the Mac, which can be days behind. It reads it directly with Full Disk Access, or from a copy of `CallHistory.storedata` and its `-wal` and `-shm` files placed in `private/`. Each incoming call gets one verdict:
 
 | Verdict | Meaning |
 |---|---|
@@ -246,6 +263,14 @@ It reads a private copy of the call history that iCloud syncs to the Mac, never 
 | Rang, known caller | A contact or a number you've called |
 
 The upload contains counts, plus the numbers of blocked calls for the dashboard list. It never contains contacts, answered calls or names. Nothing is written into the repository.
+
+### Phone status
+
+```sh
+scripts/phone_status.sh
+```
+
+It opens the app on the phone over the cable and prints what the app saw: each 0845 switch, the server lookup switch, and when **Check enabled parts** and **Refresh server data** last ran, with their results. The phone must be unlocked. Otherwise it prints the last status the app saved, with the time it was saved. It never contains phone numbers.
 
 ### Weekly re-sign
 
