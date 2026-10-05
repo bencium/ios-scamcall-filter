@@ -5,7 +5,7 @@ A private iPhone app that blocks whole ranges of phone numbers, not one number a
 This repository ships configured for UK scam ranges:
 
 - **On the phone:** every 0845 number, all 10 million of them. This part works with no internet connection.
-- **On your own small server:** every number Ofcom has issued in 0840 to 0849 (except 0845) and 0870 to 0879, about 30 million, each stored as both `+44…` and `0…`. The server can't see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
+- **On your own small server:** every number Ofcom has issued or opened for issuing in 0840 to 0849 (except 0845) and 0870 to 0879, about 31 million, each stored as both `+44…` and `0…`. The server can't see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
 
 **About 40 million numbers in total.** To block other countries' ranges, or to run the server somewhere other than Fly.io, see [Other countries and other hosts](#other-countries-and-other-hosts). So far, real-call testing covers the UK 0845 list on the phone.
 
@@ -91,7 +91,7 @@ You can run your own deployment from a clone of this public repository without p
 
 ## Server lookup for 0843, 0844 and 0870–0873
 
-**Status, 5 October 2026.** On 5 October a real 0843 call rang through. The phone asked the server and got an answer within about a second, but the database held each number only as `+44843…`. UK networks often deliver the same number as `0843…`, and the lookup matches exact text. The database is now rebuilt from Ofcom's list of issued numbers, with each number in both forms. It passes the checks below on the Mac and is **not yet uploaded** to the server. Numbers Ofcom never issued are left out, because UK networks must block calls that show them. iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
+**Status, 5 October 2026.** On 5 October three real 0843 calls rang through. The phone asked the server each time and got an answer, but the database held each number only as `+44843…`. UK networks often deliver the same number as `0843…`, and the lookup matches exact text. The database is now rebuilt from Ofcom's numbering list, with each number in both forms. It includes every block Ofcom has issued, withdrawn or opened for issuing, because opened blocks can be handed out at any time. Blocks Ofcom doesn't list are left out: they can't be issued until Ofcom opens them, and UK networks must block calls showing numbers that were never issued. This database went live at 16:00 UK time on 5 October. Against the live server, 453 encrypted lookups gave 0 wrong answers, and all three callers now block in both forms. A single lookup takes about 190 ms. Rebuild when Ofcom's list changes (see [Keeping the list current](#setting-it-up)). iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
 
 How it works:
 
@@ -106,12 +106,12 @@ Measured on the Mac with the full database:
 
 | Item | Value |
 |---|---|
-| Numbers | 30,390,000 issued numbers × 2 forms = 60,780,000 entries |
+| Numbers | 31,350,000 listed numbers × 2 forms = 62,700,000 entries |
 | Pieces (shards) | 8,192 |
 | Database on disk | 10 GB |
 | Server memory after 139 lookups | 110 MB |
 | Build time on an M2 Pro | about 9 minutes |
-| Coverage check | every issued number present once in each form, none missing, none duplicated, nothing else |
+| Coverage check | every listed number present once in each form, none missing, none duplicated, nothing else |
 | One lookup, Mac as server and client | about 120 ms |
 
 Cost ([Fly.io pricing](https://docs.fly.io/about/pricing)):
@@ -145,12 +145,12 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    ```sh
    python3 scripts/lookup/verify_coverage.py /tmp/lookup-db 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
    ```
-   It must end with `COVERAGE EXACT`: every issued number once in each form, nothing else.
+   It must end with `COVERAGE EXACT`: every listed number once in each form, nothing else.
 3. **Check it with real lookups.** This needs the patched server binary (`server/dev.sh setup`, then `swift build -c release --product PIRService` in `server/upstream`; or set `PIRSERVICE` to one you built) and the checker (`swift build -c release` in `scripts/lookup/checker`):
    ```sh
    scripts/lookup/check_db.sh /tmp/lookup-db/db 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
    ```
-   It must end with `ALL CORRECT`. It asks about the first, last and 25 random issued numbers of each prefix in five forms, and prints a table of what was blocked. `+44…` and `0…` must be blocked. The other forms, never-issued numbers next to the issued ones, 0845, a mobile and 0800 must stay allowed.
+   It must end with `ALL CORRECT`. It asks about the first, last and 25 random listed numbers of each prefix in five forms, and prints a table of what was blocked. `+44…` and `0…` must be blocked. The other forms, numbers next to the listed ones that Ofcom doesn't list, 0845, a mobile and 0800 must stay allowed.
 4. **Create the Fly app** from the `server` folder. Pick your own app name; it becomes `https://<your-app>.fly.dev`:
    ```sh
    cd server
@@ -160,7 +160,7 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    fly secrets set LOOKUP_TOKEN="$(openssl rand -base64 33)"
    ```
    Copy the same token into `.env` as `LOOKUP_TOKEN`, and set `LOOKUP_URL=https://<your-app>.fly.dev` and `FLY_APP=<your-app>`. Then deploy from the top folder of the repository with `scripts/deploy.sh --detach`. The server waits for its database instead of crashing.
-5. **Upload the database:** `scripts/lookup/upload_db.sh /tmp/lookup-db/db`. It sends 16 parts and restarts the server. Fly's command-line tunnel managed about 2 MB/s, so this takes over an hour. If the connection drops, run it again and it resumes. Avoid other `fly ssh` sessions while it runs. Auto-stop only counts web traffic, so switch it off for the upload and back on afterwards:
+5. **Upload the database:** `scripts/lookup/upload_db.sh /tmp/lookup-db/db`. It sends 16 parts and restarts the server. To replace a live database, add `IN_PLACE=1` in front: the volume only has room for one copy, so each part is unpacked over the live files. It first checks that the shard count and settings match, so blocking never stops. Fly's command-line tunnel managed about 2 MB/s, so this takes over an hour. If the connection drops, run it again and it resumes. Avoid other `fly ssh` sessions while it runs. Auto-stop only counts web traffic, so switch it off for the upload and back on afterwards:
    ```sh
    fly machine update <machine id> --autostop=off --skip-health-checks --yes    # before
    fly machine update <machine id> --autostop=suspend --skip-health-checks --yes   # after
@@ -170,6 +170,14 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
 8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
 To add or remove a prefix, rerun steps 1, 2, 3 and 5 with the new list. Update `serverPrefixes` in `Shared/BlockerPlan.swift` so the app shows it. Then tap **Refresh server data** in the app.
+
+**Keeping the list current.** Ofcom updates its numbering list regularly, and a block it opens later isn't blocked until the database is rebuilt. Now and then, run:
+
+```sh
+python3 scripts/lookup/ofcom_changes.py
+```
+
+It compares Ofcom's current list with `scripts/lookup/listed-ranges.txt`, the record of what the live database blocks, and prints any ranges that were added or removed. If something changed, rerun steps 1, 2, 3 and 5 (with `IN_PLACE=1`). Then run `python3 scripts/lookup/ofcom_changes.py --save /tmp/lookup-db/s8.csv` and commit the updated record.
 
 ### Changing and deploying the server
 
@@ -185,7 +193,7 @@ Commit the patch files, then deploy with `scripts/deploy.sh`. It refuses unless 
 
 ### Other countries and other hosts
 
-**Any country's numbers.** The server matches full international numbers, so it isn't tied to the UK. Give the build script an international pattern in which each `x` is any digit. For example, `+1900xxxxxxx` covers 10 million US 900 numbers. A UK prefix like `0843` stands for every number Ofcom has issued under it, in both forms (Ofcom's list covers numbers starting 08 only). Both kinds can be mixed in one database:
+**Any country's numbers.** The server matches full international numbers, so it isn't tied to the UK. Give the build script an international pattern in which each `x` is any digit. For example, `+1900xxxxxxx` covers 10 million US 900 numbers. A UK prefix like `0843` stands for every number Ofcom has issued or opened for issuing under it, in both forms (Ofcom's list covers numbers starting 08 only). Both kinds can be mixed in one database:
 
 ```sh
 scripts/lookup/build_db.sh /tmp/lookup-db 8192 0843 0844 +1900xxxxxxx
@@ -196,7 +204,7 @@ Each 10 million numbers adds about 1.8 GB of disk and no extra server memory. Th
 **Any host that runs a container.** This repository deploys to Fly.io, but `server/Dockerfile` is a standard container. It should run on Oracle Cloud (its Always Free tier can be set up in London), Google Cloud, AWS or a home server. It needs:
 
 - HTTPS on its own hostname: no custom port, no path, and a valid certificate
-- a persistent disk of about 13 GB for the 61-million-entry database
+- a persistent disk of about 13 GB for the 63-million-entry database
 - about 256 MB of memory
 - the `LOOKUP_TOKEN` and `DASHBOARD_PASSWORD` secrets as environment variables, and `SHARD_COUNT` set to the shard count you built
 
