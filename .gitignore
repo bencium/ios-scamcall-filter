@@ -30,3 +30,5 @@ server/fly.toml
 Lookup/Info.plist
 # Apple's server code with our patches, made by server/dev.sh setup.
 server/upstream/
+# Personal Claude Code settings; the shared ones are .claude/settings.json.
+.claude/settings.local.json
