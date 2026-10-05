@@ -12,6 +12,7 @@ from pathlib import Path
 import base64
 import os
 import plistlib
+import subprocess
 import sys
 
 root = Path(__file__).resolve().parent.parent
@@ -29,6 +30,21 @@ def setting(name, default=''):
             if separator and key == name:
                 return value.strip().strip('"').strip("'")
     return default
+
+def install_privacy_guard():
+    """Every clone runs this script, so it also installs the commit guard from IMPORTANT.md."""
+    hooks = root / '.git/hooks'
+    if not hooks.is_dir():
+        return
+    present = [(hooks / name).read_text() for name in ('pre-commit', 'pre-push') if (hooks / name).exists()]
+    if len(present) == 2 and all('privacy_guard' in text for text in present):
+        return
+    if any('privacy_guard' not in text for text in present):
+        print('Privacy guard NOT installed: your own git hooks are in the way. See IMPORTANT.md.')
+        return
+    subprocess.run([root / 'scripts/privacy_guard.sh', '--install'], check=True, cwd=root)
+
+install_privacy_guard()
 
 def add(**values):
     global serial
