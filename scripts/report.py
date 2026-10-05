@@ -14,8 +14,9 @@ opened), fetches the server's metrics, and gives every incoming call one verdict
 
 Prints a 7-day summary. With --upload it sends the dashboard a summary: counts per day and per
 prefix, and the numbers of blocked calls only (never contacts, answered calls or names).
-History: --history, else private/CallHistory.storedata, else the synced location (which needs
-Full Disk Access for the terminal). Settings come from .env: DASHBOARD_PASSWORD, LOOKUP_URL.
+History: --history, else private/backup-copy (a fresh copy from scripts/call_history.sh), else
+private/CallHistory.storedata, else the synced location (days behind, and needs Full Disk Access
+for the terminal). The report names the file it used. Settings come from .env: DASHBOARD_PASSWORD, LOOKUP_URL.
 """
 import argparse
 import base64
@@ -43,11 +44,12 @@ SERVER_PREFIXES = ["0843", "0844", "0870", "0871", "0872", "0873"]
 def main():
     args = parse_args()
     env = read_env()
-    calls = read_calls(find_history(args.history), args.days)
+    history = find_history(args.history)
+    calls = read_calls(history, args.days)
     lookups = fetch_lookups(env)
     rows = [classify(call, lookups) for call in calls]
     summary = summarise(rows, calls, args.days)
-    print_report(summary, lookups is not None)
+    print_report(summary, lookups is not None, history)
     if args.upload:
         upload(summary, env)
 
@@ -74,7 +76,7 @@ def read_env():
 
 def find_history(given):
     private = ROOT / "private"
-    for candidate in [given, private / "CallHistory.storedata", SYNCED]:
+    for candidate in [given, private / "backup-copy", private / "CallHistory.storedata", SYNCED]:
         if candidate is None:
             continue
         path = candidate / "CallHistory.storedata" if candidate.is_dir() else candidate
@@ -87,8 +89,8 @@ def find_history(given):
             continue        # the synced location needs Full Disk Access for the terminal
     if any(private.glob("CallHistory.storedata-*")):
         sys.exit(f"{private} has the -wal and -shm files but not CallHistory.storedata itself. Copy that file too.")
-    sys.exit("No call history found. Copy CallHistory.storedata and its -wal and -shm files from\n"
-             f"{SYNCED.parent} into {private} (Finder: Cmd+Shift+G), or give --history.")
+    sys.exit("No call history found. Run scripts/call_history.sh for a fresh copy from the phone, or copy\n"
+             f"CallHistory.storedata and its -wal and -shm files from {SYNCED.parent} into {private}.")
 
 
 def read_calls(path, days):
@@ -242,7 +244,7 @@ def resign_due():
     return min(expiries) if expiries else None
 
 
-def print_report(summary, matched):
+def print_report(summary, matched, history):
     week = summary["daily"][-7:]
     totals = Counter()
     for day in week:
@@ -255,7 +257,8 @@ def print_report(summary, matched):
     print(f"  O2 'Suspected Spam' label: {totals['o2_spam_label']}")
     if not matched:
         print("  (server log unavailable: no server block can be proven)")
-    print(f"Latest call in synced history: {summary['latest_call_in_history']}")
+    source = history.relative_to(ROOT) if history.is_relative_to(ROOT) else history
+    print(f"Latest call in {source}: {summary['latest_call_in_history']}")
     print(f"Re-sign due by: {summary['resign_due']}")
 
 
