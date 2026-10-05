@@ -1,5 +1,6 @@
 # Numbers the live lookup database blocks, from Ofcom's s8.csv. Written by ofcom_changes.py --save.
 # prefixes: 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
+# saved: 2026-10-05
 08430000000-08430079999
 08430090000-08430219999
 08430230000-08430239999
