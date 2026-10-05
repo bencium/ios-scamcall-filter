@@ -9,6 +9,11 @@
 # for the database plus one part. Finished parts are marked on the volume, so rerunning after a
 # dropped connection resumes where it stopped (FRESH=1 starts over). Files land in
 # /data/incoming and replace the live set only once every part has arrived.
+#
+# IN_PLACE=1 unpacks each part straight over the live files instead, for replacing a database
+# on a volume too small to hold two copies. It first checks that the new build has the same
+# shard count and shard settings as the live one, so every shard is always a complete old or
+# new version: blocking never stops, and the phone's saved setup stays valid.
 # Avoid other `fly ssh` sessions to the app while this runs; they can drop the transfer.
 set -eu
 DB=$1
@@ -20,9 +25,17 @@ trap 'rm -rf "$WORK"' EXIT
 remote() { fly ssh console -q -a "$APP" -C "sh -c '$1'"; }
 retry() { n=1; until "$@"; do [ $n -ge 4 ] && return 1; echo "  retry $n: $*" | cut -c1-80; n=$((n + 1)); sleep 10; done; }
 
-if [ "${FRESH:-0}" = 1 ]; then remote "rm -rf /data/incoming"; fi
-retry remote "mkdir -p /data/incoming && rm -f /data/incoming/part.tar && df -h /data | tail -1"
-done_parts=$(remote "ls -a /data/incoming | grep -E \"^\\.part-[0-9]+-done\$\" || true" | tr -d '\r')
+if [ "${IN_PLACE:-0}" = 1 ]; then
+  TARGET=/data; MARKS=/data/.in-place
+  live=$(remote "cat /data/block-0.params.txtpb; ls /data | grep -cE \"^block-[0-9]+\\.bin\$\"" | tr -d '\r')
+  new=$(cat "$DB/block-0.params.txtpb"; ls "$DB" | grep -cE '^block-[0-9]+\.bin$')
+  [ "$live" = "$new" ] || { echo "IN_PLACE refused: the live shard count or shard settings differ from $DB"; exit 1; }
+else
+  TARGET=/data/incoming; MARKS=/data/incoming
+fi
+if [ "${FRESH:-0}" = 1 ]; then remote "rm -rf /data/incoming $MARKS"; fi
+retry remote "mkdir -p $TARGET $MARKS && rm -f $TARGET/part.tar && df -h /data | tail -1"
+done_parts=$(remote "ls -a $MARKS | grep -E \"^\\.part-[0-9]+-done\$\" || true" | tr -d '\r')
 part=0
 while [ "$part" -lt "$PARTS" ]; do
   if echo "$done_parts" | grep -qx ".part-$part-done"; then
@@ -32,13 +45,17 @@ while [ "$part" -lt "$PARTS" ]; do
   (cd "$DB" && ls | grep -E '^(block|identity)-[0-9]+\.' | awk -v p="$part" -v n="$PARTS" -F'[-.]' '$2 % n == p' > "$WORK/list")
   COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata -cf "$WORK/part.tar" -C "$DB" -T "$WORK/list"
   echo "part $((part + 1))/$PARTS: $(wc -l < "$WORK/list" | tr -d ' ') files, $(du -h "$WORK/part.tar" | cut -f1), started $(date +%H:%M)"
-  retry fly ssh sftp put -a "$APP" "$WORK/part.tar" /data/incoming/part.tar
-  retry remote "tar -xf /data/incoming/part.tar -C /data/incoming && rm /data/incoming/part.tar && touch /data/incoming/.part-$part-done"
+  retry fly ssh sftp put -a "$APP" "$WORK/part.tar" "$TARGET/part.tar"
+  retry remote "tar -xf $TARGET/part.tar -C $TARGET && rm $TARGET/part.tar && touch $MARKS/.part-$part-done"
   rm "$WORK/part.tar"
   part=$((part + 1))
 done
 expected=$(cd "$DB" && ls | grep -cE '^(block|identity)-[0-9]+\.')
-remote "n=\$(ls /data/incoming | grep -cE \"^(block|identity)-\"); echo \"files on volume: \$n of $expected\"; [ \$n -eq $expected ]"
-remote "rm -f /data/block-* /data/identity-* && mv /data/incoming/block-* /data/incoming/identity-* /data/ && rm -rf /data/incoming && touch /data/READY"
+remote "n=\$(ls $TARGET | grep -cE \"^(block|identity)-\"); echo \"files on volume: \$n of $expected\"; [ \$n -eq $expected ]"
+if [ "$TARGET" = /data ]; then
+  remote "rm -rf $MARKS && touch /data/READY"
+else
+  remote "rm -f /data/block-* /data/identity-* && mv /data/incoming/block-* /data/incoming/identity-* /data/ && rm -rf /data/incoming && touch /data/READY"
+fi
 fly apps restart "$APP"
 echo "uploaded; server restarting on the new database"
