@@ -177,7 +177,15 @@ To add or remove a prefix, rerun steps 1, 2, 3 and 5 with the new list. Update `
 python3 scripts/lookup/ofcom_changes.py
 ```
 
-It compares Ofcom's current list with `scripts/lookup/listed-ranges.txt`, the record of what the live database blocks, and prints any ranges that were added or removed. If something changed, rerun steps 1, 2, 3 and 5 (with `IN_PLACE=1`). Then run `python3 scripts/lookup/ofcom_changes.py --save /tmp/lookup-db/s8.csv` and commit the updated record.
+It compares Ofcom's current list with `scripts/lookup/listed-ranges.txt`, the record of what the live database blocks, and prints any ranges that were added or removed. It also sends the result to the server, where the app shows it. If something changed, rerun steps 1, 2, 3 and 5 (with `IN_PLACE=1`). Then run `python3 scripts/lookup/ofcom_changes.py --save /tmp/lookup-db/s8.csv` and commit the updated record.
+
+To run it on its own on the 1st of every month at 09:00, with a Mac notification when the list changes or the check fails:
+
+```sh
+scripts/schedule_ofcom_check.sh --install    # also --run-now and --remove
+```
+
+A run missed while the Mac sleeps happens when it wakes. The log is `~/Library/Logs/084x-ofcom-check.log`.
 
 ### Changing and deploying the server
 
@@ -271,6 +279,17 @@ Without a backup copy, the report falls back to the history iCloud syncs to the 
 | Rang, known caller | A contact or a number you've called |
 
 The upload contains counts, plus the numbers of blocked calls for the dashboard list. It never contains contacts, answered calls or names. Nothing is written into the repository.
+
+### Details screen in the app
+
+The line at the top of the app says whether protection is on: all six 0845 parts and the server lookup. If the Mac's call report is recent, it also shows how many calls were blocked this week. Tap it for the Details screen:
+
+- **Server:** how fast it answered just now (about 1 s means it was asleep), when it started, unknown callers checked in the last 24 hours and 7 days, the last one, and errors.
+- **Numbers blocked:** on the server, from the Mac's notes, and on the phone, plus the last Ofcom check.
+- **Blocked calls:** counts and the last five numbers, from the Mac's call report. Only that report knows which calls were blocked: iOS doesn't tell apps, and the server never sees its own answers. The screen says how old the report is.
+- **Phone:** the switches and the re-sign date, read from the app's own signing profile.
+
+The app fetches `/dashboard/status.json` once each time it opens, with `DASHBOARD_PASSWORD` built into the app from `.env`. A call counts as checked only when its lookups include the identity question iOS always asks, so test lookups don't count. Pull down to refresh. Launch with `--details` to open the screen directly.
 
 ### Phone status
 
