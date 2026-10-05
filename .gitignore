@@ -28,3 +28,5 @@ __pycache__/
 # Personal deployment values: generated from .env, or your own Fly app.
 server/fly.toml
 Lookup/Info.plist
+# Apple's server code with our patches, made by server/dev.sh setup.
+server/upstream/
