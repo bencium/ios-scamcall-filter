@@ -39,6 +39,23 @@ final class BlockerStatus: ObservableObject {
         } else {
             updateSummary()
         }
+        saveStatusFile()
+    }
+
+    private func saveStatusFile() {
+        let file = StatusFile(
+            written: .now,
+            version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
+            summary: message,
+            parts: enabled.indices.map { .init(name: BlockerPlan.label(forPart: $0 + 1), on: enabled[$0]) },
+            serverLookupOn: BlockerPlan.usesServerLookup ? lookupEnabled : nil,
+            lastPartsCheck: StatusFile.last(.partsCheck),
+            lastServerRefresh: StatusFile.last(.serverRefresh))
+        do {
+            try file.save()
+        } catch {
+            logger.error("Status file not saved: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func updateSummary() {
@@ -74,12 +91,15 @@ final class BlockerStatus: ObservableObject {
             if let error = error as NSError? {
                 busy = false
                 message = "Part \(index + 1) failed: \(error.localizedDescription) (code \(error.code)). Full coverage is NOT confirmed."
+                StatusFile.record(.partsCheck, message)
+                saveStatusFile()
                 logger.error("Part \(index + 1, privacy: .public) failed: \(error.domain, privacy: .public) code=\(error.code, privacy: .public)")
                 return
             }
             accepted[index] = true
             logger.notice("Part \(index + 1, privacy: .public) reload accepted")
         }
+        StatusFile.record(.partsCheck, "iOS accepted parts \(indices.map { String($0 + 1) }.joined(separator: ", ")).")
         busy = false
         await refresh()
     }
@@ -96,10 +116,13 @@ final class BlockerStatus: ObservableObject {
             }
             try await lookup.refreshPIRParameters(forExtensionWithIdentifier: BlockerPlan.lookupID)
             logger.notice("Server lookup refreshed")
+            StatusFile.record(.serverRefresh, "Refreshed.")
         } catch {
             let error = error as NSError
             busy = false
             message = "Server lookup refresh failed: \(error.localizedDescription) (code \(error.code))."
+            StatusFile.record(.serverRefresh, message)
+            saveStatusFile()
             logger.error("Server lookup refresh failed: \(error.domain, privacy: .public) code=\(error.code, privacy: .public)")
             return
         }

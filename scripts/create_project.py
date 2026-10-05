@@ -66,7 +66,8 @@ def sources(refs):
                runOnlyForDeploymentPostprocessing=0)
 
 project = add()
-app_refs = [source('App/ScamBlockerApp.swift'), source('App/BlockerView.swift'), source('App/BlockerStatus.swift')]
+app_refs = [source('App/ScamBlockerApp.swift'), source('App/BlockerView.swift'), source('App/BlockerStatus.swift'),
+            source('App/StatusFile.swift')]
 directory_ref = source('Blocker/CallDirectoryHandler.swift')
 lookup_refs = [source('Lookup/LookupExtension.swift'), source('Shared/LookupSecrets.swift')]
 plan_refs = [source('Shared/BlockerPlan.swift'), source('Shared/FallbackBlocks.swift')]

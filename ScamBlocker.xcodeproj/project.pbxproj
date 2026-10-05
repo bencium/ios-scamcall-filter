@@ -18,7 +18,7 @@
 				<string>2700</string>
 			</dict>
 			<key>buildConfigurationList</key>
-			<string>000000000000000000000071</string>
+			<string>000000000000000000000073</string>
 			<key>compatibilityVersion</key>
 			<string>Xcode 14.0</string>
 			<key>developmentRegion</key>
@@ -33,23 +33,23 @@
 				<string>Base</string>
 			</array>
 			<key>mainGroup</key>
-			<string>00000000000000000000006E</string>
+			<string>000000000000000000000070</string>
 			<key>productRefGroup</key>
-			<string>00000000000000000000006D</string>
+			<string>00000000000000000000006F</string>
 			<key>projectDirPath</key>
 			<string></string>
 			<key>projectRoot</key>
 			<string></string>
 			<key>targets</key>
 			<array>
-				<string>00000000000000000000006C</string>
-				<string>000000000000000000000013</string>
-				<string>00000000000000000000001F</string>
-				<string>00000000000000000000002B</string>
-				<string>000000000000000000000037</string>
-				<string>000000000000000000000043</string>
-				<string>00000000000000000000004F</string>
-				<string>00000000000000000000005A</string>
+				<string>00000000000000000000006E</string>
+				<string>000000000000000000000014</string>
+				<string>000000000000000000000020</string>
+				<string>00000000000000000000002C</string>
+				<string>000000000000000000000038</string>
+				<string>000000000000000000000044</string>
+				<string>000000000000000000000050</string>
+				<string>00000000000000000000005B</string>
 			</array>
 		</dict>
 		<key>000000000000000000000002</key>
@@ -92,7 +92,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Blocker/CallDirectoryHandler.swift</string>
+			<string>App/StatusFile.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -103,7 +103,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Lookup/LookupExtension.swift</string>
+			<string>Blocker/CallDirectoryHandler.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -114,7 +114,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Shared/LookupSecrets.swift</string>
+			<string>Lookup/LookupExtension.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -125,7 +125,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Shared/BlockerPlan.swift</string>
+			<string>Shared/LookupSecrets.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -136,11 +136,22 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Shared/FallbackBlocks.swift</string>
+			<string>Shared/BlockerPlan.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
 		<key>00000000000000000000000A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Shared/FallbackBlocks.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>00000000000000000000000B</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXFileReference</string>
@@ -151,7 +162,7 @@
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
-		<key>00000000000000000000000B</key>
+		<key>00000000000000000000000C</key>
 		<dict>
 			<key>explicitFileType</key>
 			<string>wrapper.app-extension</string>
@@ -161,42 +172,6 @@
 			<string>Blocker.appex</string>
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>00000000000000000000000C</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>APPLICATION_EXTENSION_API_ONLY</key>
-				<string>YES</string>
-				<key>CODE_SIGN_STYLE</key>
-				<string>Automatic</string>
-				<key>CURRENT_PROJECT_VERSION</key>
-				<string>4</string>
-				<key>DEBUG_INFORMATION_FORMAT</key>
-				<string>dwarf-with-dsym</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string></string>
-				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info1.plist</string>
-				<key>LD_RUNPATH_SEARCH_PATHS</key>
-				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
-				<key>MARKETING_VERSION</key>
-				<string>0.4</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Blocker</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SKIP_INSTALL</key>
-				<string>YES</string>
-				<key>SWIFT_OPTIMIZATION_LEVEL</key>
-				<string>-O</string>
-				<key>TARGETED_DEVICE_FAMILY</key>
-				<string>1</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
 		</dict>
 		<key>00000000000000000000000D</key>
 		<dict>
@@ -232,129 +207,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>00000000000000000000000E</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>00000000000000000000000C</string>
-				<string>00000000000000000000000D</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>00000000000000000000000F</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000010</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000011</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000012</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>00000000000000000000000F</string>
-				<string>000000000000000000000010</string>
-				<string>000000000000000000000011</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>000000000000000000000013</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>00000000000000000000000E</string>
-			<key>buildPhases</key>
-			<array>
-				<string>000000000000000000000012</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Blocker</string>
-			<key>productName</key>
-			<string>Blocker</string>
-			<key>productReference</key>
-			<string>00000000000000000000000B</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>000000000000000000000014</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>000000000000000000000013</string>
-			<key>remoteInfo</key>
-			<string>Blocker</string>
-		</dict>
-		<key>000000000000000000000015</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>000000000000000000000013</string>
-			<key>targetProxy</key>
-			<string>000000000000000000000014</string>
-		</dict>
-		<key>000000000000000000000016</key>
-		<dict>
-			<key>fileRef</key>
-			<string>00000000000000000000000B</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>000000000000000000000017</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.app-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Part2.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>000000000000000000000018</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -369,13 +224,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info2.plist</string>
+				<string>Blocker/Info1.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Part2</string>
+				<string>uk.co.bencium.ScamBlocker.Blocker</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -388,7 +243,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>00000000000000000000000F</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>00000000000000000000000D</string>
+				<string>00000000000000000000000E</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>000000000000000000000010</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000011</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000012</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000013</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>000000000000000000000010</string>
+				<string>000000000000000000000011</string>
+				<string>000000000000000000000012</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>000000000000000000000014</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>00000000000000000000000F</string>
+			<key>buildPhases</key>
+			<array>
+				<string>000000000000000000000013</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Blocker</string>
+			<key>productName</key>
+			<string>Blocker</string>
+			<key>productReference</key>
+			<string>00000000000000000000000C</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>000000000000000000000015</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>000000000000000000000014</string>
+			<key>remoteInfo</key>
+			<string>Blocker</string>
+		</dict>
+		<key>000000000000000000000016</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>000000000000000000000014</string>
+			<key>targetProxy</key>
+			<string>000000000000000000000015</string>
+		</dict>
+		<key>000000000000000000000017</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>000000000000000000000018</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.app-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Part2.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>000000000000000000000019</key>
 		<dict>
@@ -424,129 +399,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>00000000000000000000001A</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>000000000000000000000018</string>
-				<string>000000000000000000000019</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>00000000000000000000001B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000001C</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000001D</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000001E</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>00000000000000000000001B</string>
-				<string>00000000000000000000001C</string>
-				<string>00000000000000000000001D</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>00000000000000000000001F</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>00000000000000000000001A</string>
-			<key>buildPhases</key>
-			<array>
-				<string>00000000000000000000001E</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Part2</string>
-			<key>productName</key>
-			<string>Part2</string>
-			<key>productReference</key>
-			<string>000000000000000000000017</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>000000000000000000000020</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>00000000000000000000001F</string>
-			<key>remoteInfo</key>
-			<string>Part2</string>
-		</dict>
-		<key>000000000000000000000021</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>00000000000000000000001F</string>
-			<key>targetProxy</key>
-			<string>000000000000000000000020</string>
-		</dict>
-		<key>000000000000000000000022</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000017</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>000000000000000000000023</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.app-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Part3.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>000000000000000000000024</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -561,13 +416,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info3.plist</string>
+				<string>Blocker/Info2.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Part3</string>
+				<string>uk.co.bencium.ScamBlocker.Part2</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -580,7 +435,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>00000000000000000000001B</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>000000000000000000000019</string>
+				<string>00000000000000000000001A</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>00000000000000000000001C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000001D</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000001E</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000001F</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>00000000000000000000001C</string>
+				<string>00000000000000000000001D</string>
+				<string>00000000000000000000001E</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>000000000000000000000020</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>00000000000000000000001B</string>
+			<key>buildPhases</key>
+			<array>
+				<string>00000000000000000000001F</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Part2</string>
+			<key>productName</key>
+			<string>Part2</string>
+			<key>productReference</key>
+			<string>000000000000000000000018</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>000000000000000000000021</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>000000000000000000000020</string>
+			<key>remoteInfo</key>
+			<string>Part2</string>
+		</dict>
+		<key>000000000000000000000022</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>000000000000000000000020</string>
+			<key>targetProxy</key>
+			<string>000000000000000000000021</string>
+		</dict>
+		<key>000000000000000000000023</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000018</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>000000000000000000000024</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.app-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Part3.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>000000000000000000000025</key>
 		<dict>
@@ -616,129 +591,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>000000000000000000000026</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>000000000000000000000024</string>
-				<string>000000000000000000000025</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>000000000000000000000027</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000028</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000029</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000002A</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>000000000000000000000027</string>
-				<string>000000000000000000000028</string>
-				<string>000000000000000000000029</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>00000000000000000000002B</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>000000000000000000000026</string>
-			<key>buildPhases</key>
-			<array>
-				<string>00000000000000000000002A</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Part3</string>
-			<key>productName</key>
-			<string>Part3</string>
-			<key>productReference</key>
-			<string>000000000000000000000023</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>00000000000000000000002C</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>00000000000000000000002B</string>
-			<key>remoteInfo</key>
-			<string>Part3</string>
-		</dict>
-		<key>00000000000000000000002D</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>00000000000000000000002B</string>
-			<key>targetProxy</key>
-			<string>00000000000000000000002C</string>
-		</dict>
-		<key>00000000000000000000002E</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000023</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>00000000000000000000002F</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.app-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Part4.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>000000000000000000000030</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -753,13 +608,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info4.plist</string>
+				<string>Blocker/Info3.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Part4</string>
+				<string>uk.co.bencium.ScamBlocker.Part3</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -772,7 +627,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>000000000000000000000027</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>000000000000000000000025</string>
+				<string>000000000000000000000026</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>000000000000000000000028</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000029</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000002A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000002B</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>000000000000000000000028</string>
+				<string>000000000000000000000029</string>
+				<string>00000000000000000000002A</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>00000000000000000000002C</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>000000000000000000000027</string>
+			<key>buildPhases</key>
+			<array>
+				<string>00000000000000000000002B</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Part3</string>
+			<key>productName</key>
+			<string>Part3</string>
+			<key>productReference</key>
+			<string>000000000000000000000024</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>00000000000000000000002D</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>00000000000000000000002C</string>
+			<key>remoteInfo</key>
+			<string>Part3</string>
+		</dict>
+		<key>00000000000000000000002E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>00000000000000000000002C</string>
+			<key>targetProxy</key>
+			<string>00000000000000000000002D</string>
+		</dict>
+		<key>00000000000000000000002F</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000024</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>000000000000000000000030</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.app-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Part4.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>000000000000000000000031</key>
 		<dict>
@@ -808,129 +783,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>000000000000000000000032</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>000000000000000000000030</string>
-				<string>000000000000000000000031</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>000000000000000000000033</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000034</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000035</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000036</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>000000000000000000000033</string>
-				<string>000000000000000000000034</string>
-				<string>000000000000000000000035</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>000000000000000000000037</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>000000000000000000000032</string>
-			<key>buildPhases</key>
-			<array>
-				<string>000000000000000000000036</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Part4</string>
-			<key>productName</key>
-			<string>Part4</string>
-			<key>productReference</key>
-			<string>00000000000000000000002F</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>000000000000000000000038</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>000000000000000000000037</string>
-			<key>remoteInfo</key>
-			<string>Part4</string>
-		</dict>
-		<key>000000000000000000000039</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>000000000000000000000037</string>
-			<key>targetProxy</key>
-			<string>000000000000000000000038</string>
-		</dict>
-		<key>00000000000000000000003A</key>
-		<dict>
-			<key>fileRef</key>
-			<string>00000000000000000000002F</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>00000000000000000000003B</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.app-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Part5.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>00000000000000000000003C</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -945,13 +800,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info5.plist</string>
+				<string>Blocker/Info4.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Part5</string>
+				<string>uk.co.bencium.ScamBlocker.Part4</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -964,7 +819,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>000000000000000000000033</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>000000000000000000000031</string>
+				<string>000000000000000000000032</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>000000000000000000000034</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000035</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000036</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000037</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>000000000000000000000034</string>
+				<string>000000000000000000000035</string>
+				<string>000000000000000000000036</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>000000000000000000000038</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>000000000000000000000033</string>
+			<key>buildPhases</key>
+			<array>
+				<string>000000000000000000000037</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Part4</string>
+			<key>productName</key>
+			<string>Part4</string>
+			<key>productReference</key>
+			<string>000000000000000000000030</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>000000000000000000000039</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>000000000000000000000038</string>
+			<key>remoteInfo</key>
+			<string>Part4</string>
+		</dict>
+		<key>00000000000000000000003A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>000000000000000000000038</string>
+			<key>targetProxy</key>
+			<string>000000000000000000000039</string>
+		</dict>
+		<key>00000000000000000000003B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000030</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>00000000000000000000003C</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.app-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Part5.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>00000000000000000000003D</key>
 		<dict>
@@ -1000,129 +975,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>00000000000000000000003E</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>00000000000000000000003C</string>
-				<string>00000000000000000000003D</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>00000000000000000000003F</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000040</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000041</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>000000000000000000000042</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>00000000000000000000003F</string>
-				<string>000000000000000000000040</string>
-				<string>000000000000000000000041</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>000000000000000000000043</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>00000000000000000000003E</string>
-			<key>buildPhases</key>
-			<array>
-				<string>000000000000000000000042</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Part5</string>
-			<key>productName</key>
-			<string>Part5</string>
-			<key>productReference</key>
-			<string>00000000000000000000003B</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>000000000000000000000044</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>000000000000000000000043</string>
-			<key>remoteInfo</key>
-			<string>Part5</string>
-		</dict>
-		<key>000000000000000000000045</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>000000000000000000000043</string>
-			<key>targetProxy</key>
-			<string>000000000000000000000044</string>
-		</dict>
-		<key>000000000000000000000046</key>
-		<dict>
-			<key>fileRef</key>
-			<string>00000000000000000000003B</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>000000000000000000000047</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.app-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Part6.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>000000000000000000000048</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -1137,13 +992,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Blocker/Info6.plist</string>
+				<string>Blocker/Info5.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Part6</string>
+				<string>uk.co.bencium.ScamBlocker.Part5</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -1156,7 +1011,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>00000000000000000000003F</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>00000000000000000000003D</string>
+				<string>00000000000000000000003E</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>000000000000000000000040</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000041</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000042</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>000000000000000000000043</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>000000000000000000000040</string>
+				<string>000000000000000000000041</string>
+				<string>000000000000000000000042</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>000000000000000000000044</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>00000000000000000000003F</string>
+			<key>buildPhases</key>
+			<array>
+				<string>000000000000000000000043</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Part5</string>
+			<key>productName</key>
+			<string>Part5</string>
+			<key>productReference</key>
+			<string>00000000000000000000003C</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>000000000000000000000045</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>000000000000000000000044</string>
+			<key>remoteInfo</key>
+			<string>Part5</string>
+		</dict>
+		<key>000000000000000000000046</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>000000000000000000000044</string>
+			<key>targetProxy</key>
+			<string>000000000000000000000045</string>
+		</dict>
+		<key>000000000000000000000047</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000003C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>000000000000000000000048</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.app-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Part6.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>000000000000000000000049</key>
 		<dict>
@@ -1192,129 +1167,9 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>00000000000000000000004A</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>000000000000000000000048</string>
-				<string>000000000000000000000049</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<integer>0</integer>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>00000000000000000000004B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000005</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000004C</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000004D</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000009</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>00000000000000000000004E</key>
-		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>00000000000000000000004B</string>
-				<string>00000000000000000000004C</string>
-				<string>00000000000000000000004D</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
-		</dict>
-		<key>00000000000000000000004F</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>00000000000000000000004A</string>
-			<key>buildPhases</key>
-			<array>
-				<string>00000000000000000000004E</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>Part6</string>
-			<key>productName</key>
-			<string>Part6</string>
-			<key>productReference</key>
-			<string>000000000000000000000047</string>
-			<key>productType</key>
-			<string>com.apple.product-type.app-extension</string>
-		</dict>
-		<key>000000000000000000000050</key>
-		<dict>
-			<key>containerPortal</key>
-			<string>000000000000000000000001</string>
-			<key>isa</key>
-			<string>PBXContainerItemProxy</string>
-			<key>proxyType</key>
-			<integer>1</integer>
-			<key>remoteGlobalIDString</key>
-			<string>00000000000000000000004F</string>
-			<key>remoteInfo</key>
-			<string>Part6</string>
-		</dict>
-		<key>000000000000000000000051</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXTargetDependency</string>
-			<key>target</key>
-			<string>00000000000000000000004F</string>
-			<key>targetProxy</key>
-			<string>000000000000000000000050</string>
-		</dict>
-		<key>000000000000000000000052</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000047</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>RemoveHeadersOnCopy</string>
-				</array>
-			</dict>
-		</dict>
-		<key>000000000000000000000053</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.extensionkit-extension</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>Lookup.appex</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>000000000000000000000054</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -1329,13 +1184,13 @@
 				<key>DEVELOPMENT_TEAM</key>
 				<string></string>
 				<key>INFOPLIST_FILE</key>
-				<string>Lookup/Info.plist</string>
+				<string>Blocker/Info6.plist</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
 				<key>MARKETING_VERSION</key>
 				<string>0.4</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker.Lookup</string>
+				<string>uk.co.bencium.ScamBlocker.Part6</string>
 				<key>PRODUCT_NAME</key>
 				<string>$(TARGET_NAME)</string>
 				<key>SKIP_INSTALL</key>
@@ -1348,7 +1203,127 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Debug</string>
+			<string>Release</string>
+		</dict>
+		<key>00000000000000000000004B</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>000000000000000000000049</string>
+				<string>00000000000000000000004A</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<integer>0</integer>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>00000000000000000000004C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000006</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000004D</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000004E</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000004F</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>00000000000000000000004C</string>
+				<string>00000000000000000000004D</string>
+				<string>00000000000000000000004E</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>000000000000000000000050</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>00000000000000000000004B</string>
+			<key>buildPhases</key>
+			<array>
+				<string>00000000000000000000004F</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Part6</string>
+			<key>productName</key>
+			<string>Part6</string>
+			<key>productReference</key>
+			<string>000000000000000000000048</string>
+			<key>productType</key>
+			<string>com.apple.product-type.app-extension</string>
+		</dict>
+		<key>000000000000000000000051</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>000000000000000000000001</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<integer>1</integer>
+			<key>remoteGlobalIDString</key>
+			<string>000000000000000000000050</string>
+			<key>remoteInfo</key>
+			<string>Part6</string>
+		</dict>
+		<key>000000000000000000000052</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>000000000000000000000050</string>
+			<key>targetProxy</key>
+			<string>000000000000000000000051</string>
+		</dict>
+		<key>000000000000000000000053</key>
+		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000048</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>settings</key>
+			<dict>
+				<key>ATTRIBUTES</key>
+				<array>
+					<string>RemoveHeadersOnCopy</string>
+				</array>
+			</dict>
+		</dict>
+		<key>000000000000000000000054</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.extensionkit-extension</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Lookup.appex</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>000000000000000000000055</key>
 		<dict>
@@ -1384,14 +1359,50 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>000000000000000000000056</key>
 		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>APPLICATION_EXTENSION_API_ONLY</key>
+				<string>YES</string>
+				<key>CODE_SIGN_STYLE</key>
+				<string>Automatic</string>
+				<key>CURRENT_PROJECT_VERSION</key>
+				<string>4</string>
+				<key>DEBUG_INFORMATION_FORMAT</key>
+				<string>dwarf-with-dsym</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string></string>
+				<key>INFOPLIST_FILE</key>
+				<string>Lookup/Info.plist</string>
+				<key>LD_RUNPATH_SEARCH_PATHS</key>
+				<string>$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks</string>
+				<key>MARKETING_VERSION</key>
+				<string>0.4</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>uk.co.bencium.ScamBlocker.Lookup</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SKIP_INSTALL</key>
+				<string>YES</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-O</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>1</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+		</dict>
+		<key>000000000000000000000057</key>
+		<dict>
 			<key>buildConfigurations</key>
 			<array>
-				<string>000000000000000000000054</string>
 				<string>000000000000000000000055</string>
+				<string>000000000000000000000056</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
 			<integer>0</integer>
@@ -1399,13 +1410,6 @@
 			<string>Release</string>
 			<key>isa</key>
 			<string>XCConfigurationList</string>
-		</dict>
-		<key>000000000000000000000057</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000006</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
 		</dict>
 		<key>000000000000000000000058</key>
 		<dict>
@@ -1416,25 +1420,32 @@
 		</dict>
 		<key>000000000000000000000059</key>
 		<dict>
+			<key>fileRef</key>
+			<string>000000000000000000000008</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000005A</key>
+		<dict>
 			<key>buildActionMask</key>
 			<integer>2147483647</integer>
 			<key>files</key>
 			<array>
-				<string>000000000000000000000057</string>
 				<string>000000000000000000000058</string>
+				<string>000000000000000000000059</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
 		</dict>
-		<key>00000000000000000000005A</key>
+		<key>00000000000000000000005B</key>
 		<dict>
 			<key>buildConfigurationList</key>
-			<string>000000000000000000000056</string>
+			<string>000000000000000000000057</string>
 			<key>buildPhases</key>
 			<array>
-				<string>000000000000000000000059</string>
+				<string>00000000000000000000005A</string>
 			</array>
 			<key>buildRules</key>
 			<array/>
@@ -1447,11 +1458,11 @@
 			<key>productName</key>
 			<string>Lookup</string>
 			<key>productReference</key>
-			<string>000000000000000000000053</string>
+			<string>000000000000000000000054</string>
 			<key>productType</key>
 			<string>com.apple.product-type.extensionkit-extension</string>
 		</dict>
-		<key>00000000000000000000005B</key>
+		<key>00000000000000000000005C</key>
 		<dict>
 			<key>containerPortal</key>
 			<string>000000000000000000000001</string>
@@ -1460,23 +1471,23 @@
 			<key>proxyType</key>
 			<integer>1</integer>
 			<key>remoteGlobalIDString</key>
-			<string>00000000000000000000005A</string>
+			<string>00000000000000000000005B</string>
 			<key>remoteInfo</key>
 			<string>Lookup</string>
 		</dict>
-		<key>00000000000000000000005C</key>
+		<key>00000000000000000000005D</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXTargetDependency</string>
 			<key>target</key>
-			<string>00000000000000000000005A</string>
-			<key>targetProxy</key>
 			<string>00000000000000000000005B</string>
+			<key>targetProxy</key>
+			<string>00000000000000000000005C</string>
 		</dict>
-		<key>00000000000000000000005D</key>
+		<key>00000000000000000000005E</key>
 		<dict>
 			<key>fileRef</key>
-			<string>000000000000000000000053</string>
+			<string>000000000000000000000054</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 			<key>settings</key>
@@ -1487,7 +1498,7 @@
 				</array>
 			</dict>
 		</dict>
-		<key>00000000000000000000005E</key>
+		<key>00000000000000000000005F</key>
 		<dict>
 			<key>explicitFileType</key>
 			<string>wrapper.application</string>
@@ -1498,7 +1509,7 @@
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
-		<key>00000000000000000000005F</key>
+		<key>000000000000000000000060</key>
 		<dict>
 			<key>buildActionMask</key>
 			<integer>2147483647</integer>
@@ -1508,12 +1519,12 @@
 			<integer>13</integer>
 			<key>files</key>
 			<array>
-				<string>000000000000000000000016</string>
-				<string>000000000000000000000022</string>
-				<string>00000000000000000000002E</string>
-				<string>00000000000000000000003A</string>
-				<string>000000000000000000000046</string>
-				<string>000000000000000000000052</string>
+				<string>000000000000000000000017</string>
+				<string>000000000000000000000023</string>
+				<string>00000000000000000000002F</string>
+				<string>00000000000000000000003B</string>
+				<string>000000000000000000000047</string>
+				<string>000000000000000000000053</string>
 			</array>
 			<key>isa</key>
 			<string>PBXCopyFilesBuildPhase</string>
@@ -1522,7 +1533,7 @@
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
 		</dict>
-		<key>000000000000000000000060</key>
+		<key>000000000000000000000061</key>
 		<dict>
 			<key>buildActionMask</key>
 			<integer>2147483647</integer>
@@ -1532,7 +1543,7 @@
 			<integer>16</integer>
 			<key>files</key>
 			<array>
-				<string>00000000000000000000005D</string>
+				<string>00000000000000000000005E</string>
 			</array>
 			<key>isa</key>
 			<string>PBXCopyFilesBuildPhase</string>
@@ -1540,40 +1551,6 @@
 			<string>Embed ExtensionKit Extensions</string>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
-		</dict>
-		<key>000000000000000000000061</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
-				<string>AppIcon</string>
-				<key>CODE_SIGN_STYLE</key>
-				<string>Automatic</string>
-				<key>CURRENT_PROJECT_VERSION</key>
-				<string>4</string>
-				<key>DEBUG_INFORMATION_FORMAT</key>
-				<string>dwarf-with-dsym</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string></string>
-				<key>INFOPLIST_FILE</key>
-				<string>App/Info.plist</string>
-				<key>LD_RUNPATH_SEARCH_PATHS</key>
-				<string>$(inherited) @executable_path/Frameworks</string>
-				<key>MARKETING_VERSION</key>
-				<string>0.4</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>uk.co.bencium.ScamBlocker</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SWIFT_OPTIMIZATION_LEVEL</key>
-				<string>-O</string>
-				<key>TARGETED_DEVICE_FAMILY</key>
-				<string>1</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
 		</dict>
 		<key>000000000000000000000062</key>
 		<dict>
@@ -1607,14 +1584,48 @@
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
-			<string>Release</string>
+			<string>Debug</string>
 		</dict>
 		<key>000000000000000000000063</key>
 		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
+				<string>AppIcon</string>
+				<key>CODE_SIGN_STYLE</key>
+				<string>Automatic</string>
+				<key>CURRENT_PROJECT_VERSION</key>
+				<string>4</string>
+				<key>DEBUG_INFORMATION_FORMAT</key>
+				<string>dwarf-with-dsym</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string></string>
+				<key>INFOPLIST_FILE</key>
+				<string>App/Info.plist</string>
+				<key>LD_RUNPATH_SEARCH_PATHS</key>
+				<string>$(inherited) @executable_path/Frameworks</string>
+				<key>MARKETING_VERSION</key>
+				<string>0.4</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>uk.co.bencium.ScamBlocker</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-O</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>1</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+		</dict>
+		<key>000000000000000000000064</key>
+		<dict>
 			<key>buildConfigurations</key>
 			<array>
-				<string>000000000000000000000061</string>
 				<string>000000000000000000000062</string>
+				<string>000000000000000000000063</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
 			<integer>0</integer>
@@ -1623,57 +1634,40 @@
 			<key>isa</key>
 			<string>XCConfigurationList</string>
 		</dict>
-		<key>000000000000000000000064</key>
+		<key>000000000000000000000065</key>
 		<dict>
 			<key>fileRef</key>
 			<string>000000000000000000000002</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>000000000000000000000065</key>
+		<key>000000000000000000000066</key>
 		<dict>
 			<key>fileRef</key>
 			<string>000000000000000000000003</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>000000000000000000000066</key>
+		<key>000000000000000000000067</key>
 		<dict>
 			<key>fileRef</key>
 			<string>000000000000000000000004</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>000000000000000000000067</key>
-		<dict>
-			<key>fileRef</key>
-			<string>000000000000000000000008</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
 		<key>000000000000000000000068</key>
 		<dict>
 			<key>fileRef</key>
-			<string>000000000000000000000009</string>
+			<string>000000000000000000000005</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
 		<key>000000000000000000000069</key>
 		<dict>
-			<key>buildActionMask</key>
-			<integer>2147483647</integer>
-			<key>files</key>
-			<array>
-				<string>000000000000000000000064</string>
-				<string>000000000000000000000065</string>
-				<string>000000000000000000000066</string>
-				<string>000000000000000000000067</string>
-				<string>000000000000000000000068</string>
-			</array>
+			<key>fileRef</key>
+			<string>000000000000000000000009</string>
 			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<integer>0</integer>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>00000000000000000000006A</key>
 		<dict>
@@ -1688,35 +1682,60 @@
 			<integer>2147483647</integer>
 			<key>files</key>
 			<array>
+				<string>000000000000000000000065</string>
+				<string>000000000000000000000066</string>
+				<string>000000000000000000000067</string>
+				<string>000000000000000000000068</string>
+				<string>000000000000000000000069</string>
 				<string>00000000000000000000006A</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<integer>0</integer>
+		</dict>
+		<key>00000000000000000000006C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>00000000000000000000000B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>00000000000000000000006D</key>
+		<dict>
+			<key>buildActionMask</key>
+			<integer>2147483647</integer>
+			<key>files</key>
+			<array>
+				<string>00000000000000000000006C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXResourcesBuildPhase</string>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
 		</dict>
-		<key>00000000000000000000006C</key>
+		<key>00000000000000000000006E</key>
 		<dict>
 			<key>buildConfigurationList</key>
-			<string>000000000000000000000063</string>
+			<string>000000000000000000000064</string>
 			<key>buildPhases</key>
 			<array>
-				<string>000000000000000000000069</string>
 				<string>00000000000000000000006B</string>
-				<string>00000000000000000000005F</string>
+				<string>00000000000000000000006D</string>
 				<string>000000000000000000000060</string>
+				<string>000000000000000000000061</string>
 			</array>
 			<key>buildRules</key>
 			<array/>
 			<key>dependencies</key>
 			<array>
-				<string>000000000000000000000015</string>
-				<string>000000000000000000000021</string>
-				<string>00000000000000000000002D</string>
-				<string>000000000000000000000039</string>
-				<string>000000000000000000000045</string>
-				<string>000000000000000000000051</string>
-				<string>00000000000000000000005C</string>
+				<string>000000000000000000000016</string>
+				<string>000000000000000000000022</string>
+				<string>00000000000000000000002E</string>
+				<string>00000000000000000000003A</string>
+				<string>000000000000000000000046</string>
+				<string>000000000000000000000052</string>
+				<string>00000000000000000000005D</string>
 			</array>
 			<key>isa</key>
 			<string>PBXNativeTarget</string>
@@ -1725,22 +1744,22 @@
 			<key>productName</key>
 			<string>ScamBlocker</string>
 			<key>productReference</key>
-			<string>00000000000000000000005E</string>
+			<string>00000000000000000000005F</string>
 			<key>productType</key>
 			<string>com.apple.product-type.application</string>
 		</dict>
-		<key>00000000000000000000006D</key>
+		<key>00000000000000000000006F</key>
 		<dict>
 			<key>children</key>
 			<array>
-				<string>00000000000000000000005E</string>
-				<string>00000000000000000000000B</string>
-				<string>000000000000000000000017</string>
-				<string>000000000000000000000023</string>
-				<string>00000000000000000000002F</string>
-				<string>00000000000000000000003B</string>
-				<string>000000000000000000000047</string>
-				<string>000000000000000000000053</string>
+				<string>00000000000000000000005F</string>
+				<string>00000000000000000000000C</string>
+				<string>000000000000000000000018</string>
+				<string>000000000000000000000024</string>
+				<string>000000000000000000000030</string>
+				<string>00000000000000000000003C</string>
+				<string>000000000000000000000048</string>
+				<string>000000000000000000000054</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -1749,27 +1768,28 @@
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
-		<key>00000000000000000000006E</key>
+		<key>000000000000000000000070</key>
 		<dict>
 			<key>children</key>
 			<array>
 				<string>000000000000000000000002</string>
 				<string>000000000000000000000003</string>
 				<string>000000000000000000000004</string>
-				<string>00000000000000000000000A</string>
 				<string>000000000000000000000005</string>
-				<string>000000000000000000000008</string>
-				<string>000000000000000000000009</string>
+				<string>00000000000000000000000B</string>
 				<string>000000000000000000000006</string>
+				<string>000000000000000000000009</string>
+				<string>00000000000000000000000A</string>
 				<string>000000000000000000000007</string>
-				<string>00000000000000000000006D</string>
+				<string>000000000000000000000008</string>
+				<string>00000000000000000000006F</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
-		<key>00000000000000000000006F</key>
+		<key>000000000000000000000071</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -1805,7 +1825,7 @@
 			<key>name</key>
 			<string>Debug</string>
 		</dict>
-		<key>000000000000000000000070</key>
+		<key>000000000000000000000072</key>
 		<dict>
 			<key>buildSettings</key>
 			<dict>
@@ -1841,12 +1861,12 @@
 			<key>name</key>
 			<string>Release</string>
 		</dict>
-		<key>000000000000000000000071</key>
+		<key>000000000000000000000073</key>
 		<dict>
 			<key>buildConfigurations</key>
 			<array>
-				<string>00000000000000000000006F</string>
-				<string>000000000000000000000070</string>
+				<string>000000000000000000000071</string>
+				<string>000000000000000000000072</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
 			<integer>0</integer>

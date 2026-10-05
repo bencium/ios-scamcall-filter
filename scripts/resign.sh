@@ -34,14 +34,7 @@ elif [ -z "$due" ] && [ "${FORCE:-0}" != 1 ]; then
   exit 0
 fi
 
-device=${DEVICE_ID:-$(xcrun devicectl list devices --json-output /dev/stdout 2>/dev/null | python3 -c '
-import json, sys
-text = sys.stdin.read(); data = json.loads(text[text.index("{"):])
-for d in data["result"]["devices"]:
-    props, hw = d.get("connectionProperties", {}), d.get("hardwareProperties", {})
-    if hw.get("deviceType") == "iPhone" and hw.get("reality") == "physical" and props.get("pairingState") == "paired":
-        print(hw["udid"]); break')}
-[ -n "$device" ] || { echo "No paired iPhone found. Plug the phone in, unlock it, and run again."; exit 1; }
+device=$(scripts/phone_device.sh)
 
 install_build() {
   xcrun devicectl device install app --device "$device" "$APP" > /tmp/scamblocker-install.log 2>&1 \
