@@ -72,6 +72,8 @@ struct StatsView: View {
                 }
             } else if stats.stats != nil {
                 Text("No call report yet. On the Mac, run scripts/call_history.sh, then python3 scripts/report.py --upload.")
+            } else {
+                Text("Shown once the server answers.").foregroundStyle(.secondary)
             }
         } header: {
             Text("Blocked calls")

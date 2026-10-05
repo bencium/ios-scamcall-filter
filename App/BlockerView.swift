@@ -3,6 +3,8 @@ import SwiftUI
 struct BlockerView: View {
     @StateObject private var status = BlockerStatus()
     @StateObject private var stats = StatsModel()
+    /// Launching with --details opens the Details screen straight away (used for screenshots).
+    @State private var showsDetails = ProcessInfo.processInfo.arguments.contains("--details")
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -43,6 +45,7 @@ struct BlockerView: View {
                 }
             }
             .navigationTitle("084x Blocker")
+            .navigationDestination(isPresented: $showsDetails) { StatsView(stats: stats, status: status) }
             .task {
                 async let fetched: Void = stats.refresh()
                 await status.refresh()
@@ -61,8 +64,12 @@ struct BlockerView: View {
         guard status.hasReadSwitches else { return "Checking protection…" }
         let complete = !status.enabled.contains(false) && (!BlockerPlan.usesServerLookup || status.lookupEnabled)
         let summary = complete ? "Protection ON" : "Protection INCOMPLETE"
-        // Only a recent report says anything about this week.
-        guard let report = stats.stats?.phone, report.generatedAt.timeIntervalSinceNow > -2 * 86400 else { return summary }
+        // Only a recent report says anything about this week, and only if its call history was
+        // fresh when it ran: a copy that stopped days earlier shows quiet days that weren't quiet.
+        guard let report = stats.stats?.phone, report.generatedAt.timeIntervalSinceNow > -2 * 86400,
+              let newestCall = report.latestCallInHistory,
+              newestCall.timeIntervalSince(report.generatedAt) > -2 * 86400
+        else { return summary }
         return summary + ", \(report.blockedLast7Days) blocked this week"
     }
 

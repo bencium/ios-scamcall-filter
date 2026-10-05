@@ -64,6 +64,27 @@ struct ServerStats: Decodable {
     let errors7d: Int
     let mac: MacNotes?
     let phone: PhoneReport?
+
+    /// Reads the server's snake_case keys. Foundation's own snake_case conversion turns
+    /// "last_24h" into "last24H", so this one keeps a part that starts with a digit as it is.
+    static let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        decoder.keyDecodingStrategy = .custom { path in
+            let parts = path[path.count - 1].stringValue.split(separator: "_")
+            let camel = parts.dropFirst().reduce(String(parts.first ?? "")) { $0 + $1.prefix(1).uppercased() + $1.dropFirst() }
+            return Key(camel)
+        }
+        return decoder
+    }()
+
+    private struct Key: CodingKey {
+        let stringValue: String
+        let intValue: Int? = nil
+        init(_ string: String) { stringValue = string }
+        init?(stringValue: String) { self.init(stringValue) }
+        init?(intValue _: Int) { nil }
+    }
 }
 
 @MainActor
@@ -104,10 +125,7 @@ final class StatsModel: ObservableObject {
                 state = .failed("The server answered with error \(code).")
                 return
             }
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            decoder.dateDecodingStrategy = .iso8601
-            state = .loaded(try decoder.decode(ServerStats.self, from: data), answeredIn: answeredIn)
+            state = .loaded(try ServerStats.decoder.decode(ServerStats.self, from: data), answeredIn: answeredIn)
         } catch {
             state = .failed(error.localizedDescription)
         }
