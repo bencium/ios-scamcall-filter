@@ -18,7 +18,9 @@ S8_URL = ("https://www.ofcom.org.uk/siteassets/resources/documents/phones-teleco
           "information-for-industry/numbering/regular-updates/telephone-numbers/s8.csv")
 root = Path(__file__).resolve().parent.parent
 
-text = Path(sys.argv[1]).read_text() if len(sys.argv) > 1 else urllib.request.urlopen(S8_URL).read().decode()
+# Ofcom's site refuses Python's default client name with 403 Forbidden.
+download = urllib.request.Request(S8_URL, headers={"User-Agent": "Mozilla/5.0"})
+text = Path(sys.argv[1]).read_text() if len(sys.argv) > 1 else urllib.request.urlopen(download).read().decode()
 # Columns: number block, block status, provider, number length, allocation date.
 # The first header cell reads "NMS Number Block: Number Block", so columns are read by position.
 rows = list(csv.reader(io.StringIO(text.lstrip("\ufeff"))))[1:]
