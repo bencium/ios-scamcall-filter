@@ -1,5 +1,5 @@
-"""Prove the server database holds exactly the intended numbers: every number Ofcom issued
-under the given prefixes, once in each form (+448431234567 and 08431234567), nothing else,
+"""Prove the server database holds exactly the intended numbers: every number Ofcom lists
+(issued or open for issuing) under the given prefixes, once in each form (+448431234567 and 08431234567), nothing else,
 every value "block".
 
 Usage: verify_coverage.py OUTDIR PREFIX [PREFIX ...]
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from generate_block_db import issued_ranges
+from generate_block_db import listed_ranges
 
 FORMS = {
     "+44": (re.compile(rb"\x0a\x12\x0a\x0d\+44([0-9]{10})\x12\x01\x01"), 20),
@@ -29,20 +29,23 @@ def main():
     if len(sys.argv) < 3:
         sys.exit(__doc__)
     outdir, prefixes = Path(sys.argv[1]), sys.argv[2:]
-    ranges = [r for prefix in prefixes for r in issued_ranges(outdir / "s8.csv", prefix)]
+    ranges = [r for prefix in prefixes for r in listed_ranges(outdir / "s8.csv", prefix)]
     expected = np.unique(np.concatenate([np.arange(start, end, dtype=np.int64) for start, end in ranges]))
     ok = True
     for form, numbers in read_merged(outdir / "merged").items():
         ok = report(form, numbers, expected) and ok
     if not ok:
         sys.exit("COVERAGE FAILED")
-    print(f"COVERAGE EXACT: all {len(expected):,} issued numbers, once in each form, nothing else, all values = block")
+    print(f"COVERAGE EXACT: all {len(expected):,} listed numbers, once in each form, nothing else, all values = block")
 
 
 def read_merged(merged):
     """Every number in the merged shard files, per form, after checking every byte is part of a valid row."""
     found = {form: [] for form in FORMS}
-    for path in sorted(merged.glob("block-shard-*.binpb")):
+    paths = sorted(merged.glob("block-shard-*.binpb"))
+    if not paths:
+        sys.exit(f"No merged shard files in {merged}. Did build_db.sh finish?")
+    for path in paths:
         data = path.read_bytes()
         covered = 0
         for form, (row, size) in FORMS.items():
@@ -59,13 +62,13 @@ def read_merged(merged):
 def report(form, numbers, expected):
     duplicated = len(numbers) - len(np.unique(numbers))
     missing = np.setdiff1d(expected, numbers)
-    not_issued = np.setdiff1d(numbers, expected)
+    unlisted = np.setdiff1d(numbers, expected)
     print(f'"{form}..." form: {len(numbers):,} keys, {len(missing):,} missing, {duplicated:,} duplicated, '
-          f"{len(not_issued):,} never issued")
-    for label, sample in (("missing", missing), ("never issued", not_issued)):
+          f"{len(unlisted):,} not in Ofcom's list")
+    for label, sample in (("missing", missing), ("not in Ofcom's list", unlisted)):
         if len(sample):
             print(f"   e.g. {label}: 0{sample[0]}")
-    return not (len(missing) or duplicated or len(not_issued))
+    return not (len(missing) or duplicated or len(unlisted))
 
 
 if __name__ == "__main__":

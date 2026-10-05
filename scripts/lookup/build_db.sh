@@ -4,7 +4,7 @@
 #   scripts/lookup/build_db.sh OUTDIR SHARDS PREFIX [PREFIX ...]
 #   e.g. scripts/lookup/build_db.sh /tmp/lookup-db 8192 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
 #
-# UK prefixes cover every number Ofcom has issued, each in both forms (+44843... and 0843...);
+# UK prefixes cover every number Ofcom has issued or opened for issuing, each in both forms (+44843... and 0843...);
 # see generate_block_db.py. Ofcom's s8.csv is downloaded to OUTDIR/s8.csv, or set S8 to a copy.
 # Keep shards around 7,000 keys each (61M keys -> 8192 shards): each loads in a few
 # milliseconds on demand. SHARDS must be a power of two (iOS 27.3 rule).

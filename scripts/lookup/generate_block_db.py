@@ -5,10 +5,12 @@ Usage: generate_block_db.py OUTDIR PREFIX [PREFIX ...] [--issued S8_CSV] [--limi
 Each PREFIX is either a UK prefix such as 0843 or 087, or an international pattern in which
 every x stands for any digit, such as +1900xxxxxxx (any country).
 
-A UK prefix covers every number Ofcom has issued under it, read from Ofcom's s8.csv (--issued,
-downloaded to that path if it doesn't exist yet):
-the blocks listed as Allocated, Allocated(Closed Range) or Quarantined. Numbers Ofcom never
-issued are left out, because UK networks must block calls that show them. Each UK number is
+A UK prefix covers every number Ofcom has issued or opened for issuing under it, read from
+Ofcom's s8.csv (--issued, downloaded to that path if it doesn't exist yet): every block it
+lists as Allocated, Allocated(Closed Range), Quarantined or Free. Free blocks are included
+because Ofcom can hand them out at any time. Blocks Ofcom doesn't list are left out: they
+can't be issued until Ofcom opens them, and UK networks must block calls showing numbers that
+were never issued. Each UK number is
 written in both forms, +448431234567 and 08431234567: the lookup matches exact text, UK
 networks deliver numbers in both forms, and Apple doesn't document which form iOS sends.
 An international pattern covers every number it matches, in that one form.
@@ -27,7 +29,7 @@ from pathlib import Path
 
 BLOCK = b"\x01"
 NATIONAL_DIGITS = 10        # UK numbers have ten digits after the leading 0.
-ISSUED = {"Allocated", "Allocated(Closed Range)", "Quarantined"}
+LISTED = {"Allocated", "Allocated(Closed Range)", "Quarantined", "Free"}
 S8_URL = ("https://www.ofcom.org.uk/siteassets/resources/documents/phones-telecoms-and-internet/"
           "information-for-industry/numbering/regular-updates/telephone-numbers/s8.csv")
 
@@ -46,7 +48,7 @@ def main():
                 raise SystemExit("UK prefixes need --issued with Ofcom's s8.csv")
             if not args.issued.exists():
                 download(S8_URL, args.issued)
-            numbers = (n for start, end in issued_ranges(args.issued, prefix) for n in range(start, end))
+            numbers = (n for start, end in listed_ranges(args.issued, prefix) for n in range(start, end))
             keywords = (form for n in islice(numbers, args.limit) for form in (f"+44{n}", f"0{n}"))
         else:
             keywords = islice(pattern_numbers(prefix), args.limit)
@@ -64,8 +66,8 @@ def is_uk(prefix):
     return prefix.startswith("0") and prefix.isdigit() and len(prefix) <= NATIONAL_DIGITS
 
 
-def issued_ranges(s8_csv, prefix):
-    """The national numbers Ofcom issued under a UK prefix, as merged [start, end) ranges.
+def listed_ranges(s8_csv, prefix):
+    """The national numbers Ofcom has issued or opened for issuing under a UK prefix, as merged [start, end) ranges.
 
     A number is its ten digits after the leading 0 as an integer, e.g. 8431234567.
     """
@@ -77,7 +79,7 @@ def issued_ranges(s8_csv, prefix):
         # Columns: number block, status, provider, number length, allocation date. The first
         # header cell reads "NMS Number Block: Number Block", so columns are read by position.
         for cells in list(csv.reader(f))[1:]:
-            if len(cells) < 4 or cells[1] not in ISSUED or cells[3] != f"{NATIONAL_DIGITS} digit numbers":
+            if len(cells) < 4 or cells[1] not in LISTED or cells[3] != f"{NATIONAL_DIGITS} digit numbers":
                 continue
             block = span(cells[0].replace(" ", ""))
             start, end = max(block[0], wanted[0]), min(block[1], wanted[1])
@@ -117,7 +119,7 @@ def write(path, keywords):
         print(f"{path}: {count} keys")
     else:
         path.unlink()
-        print(f"{path.stem}: nothing to block (Ofcom has issued no numbers there), skipped")
+        print(f"{path.stem}: nothing to block (Ofcom lists no numbers there), skipped")
 
 
 def row(keyword):
