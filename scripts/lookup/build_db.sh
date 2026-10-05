@@ -1,10 +1,12 @@
 #!/bin/sh
-# Build the server's lookup database for a set of UK prefixes.
+# Build the server's lookup database for a set of prefixes.
 #
 #   scripts/lookup/build_db.sh OUTDIR SHARDS PREFIX [PREFIX ...]
-#   e.g. scripts/lookup/build_db.sh /tmp/lookup-db 8192 0843 0844 0870 0871 0872 0873
+#   e.g. scripts/lookup/build_db.sh /tmp/lookup-db 8192 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
 #
-# Keep shards around 7,000 numbers each (60M numbers -> 8192 shards): each loads in a few
+# UK prefixes cover every number Ofcom has issued, each in both forms (+44843... and 0843...);
+# see generate_block_db.py. Ofcom's s8.csv is downloaded to OUTDIR/s8.csv, or set S8 to a copy.
+# Keep shards around 7,000 keys each (61M keys -> 8192 shards): each loads in a few
 # milliseconds on demand. SHARDS must be a power of two (iOS 27.3 rule).
 # BUCKETS fixes every shard's table size so all shards share one parameter set, which keeps
 # the config the phone downloads small. Raise it if processing reports a cuckoo table failure.
@@ -24,10 +26,13 @@ START=$(date +%s)
 mkdir -p "$OUTDIR/raw" "$OUTDIR/shards" "$OUTDIR/merged" "$OUTDIR/configs" "$OUTDIR/db"
 
 echo "== 1/5 generate"
-python3 "$HERE/generate_block_db.py" "$OUTDIR/raw" $PREFIXES
+[ -z "${S8:-}" ] || cp "$S8" "$OUTDIR/s8.csv"     # otherwise the generator downloads it
+python3 "$HERE/generate_block_db.py" "$OUTDIR/raw" $PREFIXES --issued "$OUTDIR/s8.csv"
+# A prefix with nothing to block has no file, so the next steps use the files that exist.
+GENERATED=$(cd "$OUTDIR/raw" && ls *.binpb | sed 's/\.binpb$//')
 
 echo "== 2/5 shard each prefix into $SHARDS"
-for p in $PREFIXES; do
+for p in $GENERATED; do
   PIRShardDatabase --input-database "$OUTDIR/raw/$p.binpb" \
     --output-database "$OUTDIR/shards/$p-SHARD_ID.binpb" \
     --sharding shardCount --sharding-count "$SHARDS" > /dev/null
@@ -37,7 +42,7 @@ done
 echo "== 3/5 merge shard i across prefixes (concatenated protobufs merge their rows)"
 i=0
 while [ "$i" -lt "$SHARDS" ]; do
-  parts=""; for p in $PREFIXES; do parts="$parts $OUTDIR/shards/$p-$i.binpb"; done
+  parts=""; for p in $GENERATED; do parts="$parts $OUTDIR/shards/$p-$i.binpb"; done
   cat $parts > "$OUTDIR/merged/block-shard-$i.binpb"
   cat > "$OUTDIR/configs/$i.json" <<EOF
 {

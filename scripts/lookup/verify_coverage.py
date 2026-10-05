@@ -1,56 +1,72 @@
-"""Prove the server database holds exactly the intended numbers: every number of every
-prefix once, no duplicates, nothing else, every value "block".
+"""Prove the server database holds exactly the intended numbers: every number Ofcom issued
+under the given prefixes, once in each form (+448431234567 and 08431234567), nothing else,
+every value "block".
 
-Usage: verify_coverage.py MERGED_DIR PREFIX [PREFIX ...]
-       (MERGED_DIR is OUTDIR/merged from build_db.sh: the exact input to PIR processing)
+Usage: verify_coverage.py OUTDIR PREFIX [PREFIX ...]
+       OUTDIR is build_db.sh's output folder. The check reads OUTDIR/merged, the exact input
+       to PIR processing, and OUTDIR/s8.csv, the Ofcom list the build used.
 
-Every row written by generate_block_db.py is 20 bytes: protobuf framing, the 13-character
-key "+44" plus ten digits, and the one-byte value 0x01. Any other shape fails the check.
+generate_block_db.py writes two row shapes, each with protobuf framing and the one-byte value
+0x01: 20 bytes for "+44" plus ten digits, 18 bytes for "0" plus ten digits. A row of any other
+shape or value fails the check.
 """
+import re
 import sys
 from pathlib import Path
+
 import numpy as np
 
-ROW = 20
-HEAD = np.frombuffer(b"\x0a\x12\x0a\x0d+44", dtype=np.uint8)
-TAIL = np.frombuffer(b"\x12\x01\x01", dtype=np.uint8)
-PER_PREFIX = 10_000_000
+from generate_block_db import issued_ranges
+
+FORMS = {
+    "+44": (re.compile(rb"\x0a\x12\x0a\x0d\+44([0-9]{10})\x12\x01\x01"), 20),
+    "0": (re.compile(rb"\x0a\x10\x0a\x0b0([0-9]{10})\x12\x01\x01"), 18),
+}
+TEN_DIGITS = 10 ** np.arange(9, -1, -1, dtype=np.int64)
+
 
 def main():
-    merged, prefixes = Path(sys.argv[1]), sys.argv[2:]
-    wanted = {int(p[1:4]): p for p in prefixes}        # "0843" -> 843
-    if any(len(p) != 4 or not p.startswith("0") for p in prefixes):
-        sys.exit("expects four-digit prefixes such as 0843")
-    seen = {code: np.zeros(PER_PREFIX, dtype=np.uint8) for code in wanted}
-    rows = 0
-    for path in sorted(merged.glob("block-shard-*.binpb")):
-        data = np.fromfile(path, dtype=np.uint8)
-        if data.size % ROW:
-            sys.exit(f"{path.name}: size is not a whole number of rows")
-        table = data.reshape(-1, ROW)
-        if not ((table[:, :7] == HEAD).all() and (table[:, 17:] == TAIL).all()):
-            sys.exit(f"{path.name}: a row has unexpected framing, key format or value")
-        digits = table[:, 7:17].astype(np.int64) - 48
-        if ((digits < 0) | (digits > 9)).any():
-            sys.exit(f"{path.name}: a key contains a non-digit")
-        code = digits[:, 0] * 100 + digits[:, 1] * 10 + digits[:, 2]
-        suffix = digits[:, 3:] @ (10 ** np.arange(6, -1, -1, dtype=np.int64))
-        outside = ~np.isin(code, list(wanted))
-        if outside.any():
-            sys.exit(f"{path.name}: number outside the prefixes, e.g. 0{code[outside][0]}{suffix[outside][0]:07d}")
-        for c in wanted:
-            np.add.at(seen[c], suffix[code == c], 1)
-        rows += len(table)
+    if len(sys.argv) < 3:
+        sys.exit(__doc__)
+    outdir, prefixes = Path(sys.argv[1]), sys.argv[2:]
+    ranges = [r for prefix in prefixes for r in issued_ranges(outdir / "s8.csv", prefix)]
+    expected = np.unique(np.concatenate([np.arange(start, end, dtype=np.int64) for start, end in ranges]))
     ok = True
-    for c, prefix in wanted.items():
-        missing = int((seen[c] == 0).sum())
-        duplicated = int((seen[c] > 1).sum())
-        print(f"{prefix}: {int((seen[c] == 1).sum()):,} present once, {missing:,} missing, {duplicated:,} duplicated")
-        ok = ok and missing == 0 and duplicated == 0
-    print(f"rows: {rows:,} (expected {PER_PREFIX * len(wanted):,})")
-    if not ok or rows != PER_PREFIX * len(wanted):
+    for form, numbers in read_merged(outdir / "merged").items():
+        ok = report(form, numbers, expected) and ok
+    if not ok:
         sys.exit("COVERAGE FAILED")
-    print("COVERAGE EXACT: every number of every prefix once, nothing else, all values = block")
+    print(f"COVERAGE EXACT: all {len(expected):,} issued numbers, once in each form, nothing else, all values = block")
+
+
+def read_merged(merged):
+    """Every number in the merged shard files, per form, after checking every byte is part of a valid row."""
+    found = {form: [] for form in FORMS}
+    for path in sorted(merged.glob("block-shard-*.binpb")):
+        data = path.read_bytes()
+        covered = 0
+        for form, (row, size) in FORMS.items():
+            digits = row.findall(data)
+            covered += len(digits) * size
+            table = np.frombuffer(b"".join(digits), dtype=np.uint8).reshape(-1, 10).astype(np.int64) - 48
+            found[form].append(table @ TEN_DIGITS)
+        # Framing bytes never occur inside a row, so matches can't overlap: full byte cover means no stray rows.
+        if covered != len(data):
+            sys.exit(f"{path.name}: a row has unexpected framing, key format or value")
+    return {form: np.sort(np.concatenate(parts)) for form, parts in found.items()}
+
+
+def report(form, numbers, expected):
+    duplicated = len(numbers) - len(np.unique(numbers))
+    missing = np.setdiff1d(expected, numbers)
+    not_issued = np.setdiff1d(numbers, expected)
+    print(f'"{form}..." form: {len(numbers):,} keys, {len(missing):,} missing, {duplicated:,} duplicated, '
+          f"{len(not_issued):,} never issued")
+    for label, sample in (("missing", missing), ("never issued", not_issued)):
+        if len(sample):
+            print(f"   e.g. {label}: 0{sample[0]}")
+    return not (len(missing) or duplicated or len(not_issued))
+
 
 if __name__ == "__main__":
     main()
