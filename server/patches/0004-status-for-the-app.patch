@@ -1,0 +1,181 @@
+diff --git a/Sources/PIRService/Controllers/AppStatus.swift b/Sources/PIRService/Controllers/AppStatus.swift
+new file mode 100644
+index 0000000..2f22703
+--- /dev/null
++++ b/Sources/PIRService/Controllers/AppStatus.swift
+@@ -0,0 +1,72 @@
++// Local addition to Apple's example service (Apache-2.0): the status the iPhone app shows.
++import Foundation
++
++/// Incoming calls the server checked, and errors, counted from the metrics log.
++///
++/// iOS asks two questions per unknown caller within a second or two: "block?" and "who is it?".
++/// The test tools ask only "block?". So a cluster of lookups less than 30 seconds apart counts
++/// as one call only if it includes an identity lookup.
++struct CallsChecked {
++    private(set) var last24Hours = 0
++    private(set) var last7Days = 0
++    private(set) var last: Date?
++    private(set) var errors7Days = 0
++
++    init(csv: String, now: Date = .now) {
++        let events = csv.split(separator: "\n").compactMap(Event.init).sorted { $0.time < $1.time }
++        let weekAgo = now.addingTimeInterval(-7 * 86400)
++        errors7Days = events.filter { $0.name == "error" && $0.time > weekAgo }.count
++        var cluster: (start: Date, end: Date, isCall: Bool)?
++        for lookup in events where lookup.name == "lookup" {
++            if let open = cluster, lookup.time.timeIntervalSince(open.end) <= 30 {
++                cluster = (open.start, lookup.time, open.isCall || lookup.asksIdentity)
++            } else {
++                if let closed = cluster { count(closed.start, isCall: closed.isCall, now: now) }
++                cluster = (lookup.time, lookup.time, lookup.asksIdentity)
++            }
++        }
++        if let closed = cluster { count(closed.start, isCall: closed.isCall, now: now) }
++    }
++
++    private mutating func count(_ start: Date, isCall: Bool, now: Date) {
++        guard isCall else { return }
++        last = start
++        if now.timeIntervalSince(start) <= 86400 { last24Hours += 1 }
++        if now.timeIntervalSince(start) <= 7 * 86400 { last7Days += 1 }
++    }
++
++    /// One metrics line: time, event, detail, status, ms. Header lines and blank lines give nil.
++    private struct Event {
++        let time: Date
++        let name: String
++        let asksIdentity: Bool
++
++        init?(_ line: Substring) {
++            let fields = line.split(separator: ",", omittingEmptySubsequences: false)
++            guard fields.count >= 3, let time = try? Date(String(fields[0]), strategy: .iso8601) else { return nil }
++            self.time = time
++            name = String(fields[1])
++            asksIdentity = fields[2].split(separator: "+").contains("identity")
++        }
++    }
++}
++
++extension MetricsLog {
++    /// The JSON the app fetches: server start, calls checked and errors, plus the notes the Mac
++    /// uploads (database and Ofcom check) and the Mac's phone call report, unchanged.
++    func status() -> Data {
++        let calls = CallsChecked(csv: allLines())
++        let object: [String: Any] = [
++            "server": ["started": startedAt.formatted(.iso8601), "now": Date.now.formatted(.iso8601)],
++            "calls_checked": [
++                "last_24h": calls.last24Hours,
++                "last_7d": calls.last7Days,
++                "last": calls.last.map { $0.formatted(.iso8601) as Any } ?? NSNull(),
++            ],
++            "errors_7d": calls.errors7Days,
++            "mac": document(.macNotes).flatMap { try? JSONSerialization.jsonObject(with: $0) } ?? NSNull(),
++            "phone": document(.phoneSummary).flatMap { try? JSONSerialization.jsonObject(with: $0) } ?? NSNull(),
++        ]
++        return (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data("{}".utf8)
++    }
++}
+diff --git a/Sources/PIRService/Controllers/DashboardController.swift b/Sources/PIRService/Controllers/DashboardController.swift
+index 1e649a3..21bd4e2 100644
+--- a/Sources/PIRService/Controllers/DashboardController.swift
++++ b/Sources/PIRService/Controllers/DashboardController.swift
+@@ -3,9 +3,10 @@ import Foundation
+ import Hummingbird
+ import NIOCore
+ 
+-/// Serves the dashboard page, the server's metrics CSV, and the phone summary that the Mac
+-/// report uploads (counts only, never numbers). Every route needs HTTP Basic authentication
+-/// with the dashboard password; the user name is ignored.
++/// Serves the dashboard page, the server's metrics CSV, the phone summary that the Mac report
++/// uploads (counts plus the numbers of blocked calls), the Mac's notes on the database and the
++/// Ofcom check, and the status the iPhone app shows. Every route needs HTTP Basic
++/// authentication with the dashboard password; the user name is ignored.
+ struct DashboardController {
+     let metrics: MetricsLog
+     let password: String
+@@ -16,7 +17,9 @@ struct DashboardController {
+             .get(use: page)
+             .get("server.csv", use: serverCSV)
+             .get("phone.json", use: phoneSummary)
+-            .post("phone.json", use: storePhoneSummary)
++            .post("phone.json") { request, context in try await store(request, context, as: .phoneSummary) }
++            .post("mac.json") { request, context in try await store(request, context, as: .macNotes) }
++            .get("status.json", use: status)
+     }
+ 
+     func page(_ request: Request, context _: AppContext) async throws -> Response {
+@@ -32,22 +35,27 @@ struct DashboardController {
+ 
+     func phoneSummary(_ request: Request, context _: AppContext) async throws -> Response {
+         try authorize(request)
+-        guard let summary = await metrics.phoneSummary() else {
++        guard let summary = await metrics.document(.phoneSummary) else {
+             throw HTTPError(.notFound, message: "No phone summary uploaded yet.")
+         }
+         return respond(summary, type: "application/json")
+     }
+ 
+-    func storePhoneSummary(_ request: Request, context _: AppContext) async throws -> Response {
++    func store(_ request: Request, _: AppContext, as document: MetricsLog.Document) async throws -> Response {
+         try authorize(request)
+         let body = Data(try await request.body.collect(upTo: 256 * 1024).readableBytesView)
+         guard (try? JSONSerialization.jsonObject(with: body)) is [String: Any] else {
+             throw HTTPError(.badRequest, message: "Expected a JSON object.")
+         }
+-        try await metrics.store(phoneSummary: body)
++        try await metrics.store(body, as: document)
+         return Response(status: .noContent)
+     }
+ 
++    func status(_ request: Request, context _: AppContext) async throws -> Response {
++        try authorize(request)
++        return await respond(metrics.status(), type: "application/json")
++    }
++
+     private func authorize(_ request: Request) throws {
+         let unauthorized = HTTPError(
+             .unauthorized,
+diff --git a/Sources/PIRService/Controllers/MetricsLog.swift b/Sources/PIRService/Controllers/MetricsLog.swift
+index 5084258..9a77369 100644
+--- a/Sources/PIRService/Controllers/MetricsLog.swift
++++ b/Sources/PIRService/Controllers/MetricsLog.swift
+@@ -3,12 +3,18 @@ import Foundation
+ import Hummingbird
+ 
+ /// Appends one CSV line per lookup, key upload, error and server start to a monthly file,
+-/// and keeps the phone summary the Mac report uploads. The server never sees caller numbers,
+-/// so none can be written here. Columns: time (UTC), event, detail, status, ms.
++/// and keeps the documents the Mac uploads: the phone call report and the Mac's notes on the
++/// database and the Ofcom check. Lookups never reveal caller numbers to the server, so none are
++/// logged; only the Mac's report contains numbers. Columns: time (UTC), event, detail, status, ms.
+ actor MetricsLog {
+     static let header = "time,event,detail,status,ms"
++
++    enum Document: String {
++        case phoneSummary = "phone-summary.json", macNotes = "mac.json"
++    }
++
++    let startedAt = Date.now
+     private let directory: URL
+-    private var phoneSummaryFile: URL { directory.appendingPathComponent("phone-summary.json") }
+ 
+     init(directory: URL) throws {
+         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+@@ -43,12 +49,12 @@ actor MetricsLog {
+         return csv
+     }
+ 
+-    func phoneSummary() -> Data? {
+-        try? Data(contentsOf: phoneSummaryFile)
++    func document(_ document: Document) -> Data? {
++        try? Data(contentsOf: directory.appendingPathComponent(document.rawValue))
+     }
+ 
+-    func store(phoneSummary: Data) throws {
+-        try phoneSummary.write(to: phoneSummaryFile, options: .atomic)
++    func store(_ data: Data, as document: Document) throws {
++        try data.write(to: directory.appendingPathComponent(document.rawValue), options: .atomic)
+     }
+ 
+     private static func month(of date: Date) -> String {
