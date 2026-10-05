@@ -31,5 +31,9 @@ if xcrun devicectl device process launch --device "$device" --terminate-existing
 else
   echo "Could not open the app (is the phone unlocked?). Showing the last status it saved." >&2
 fi
-fetch || { echo "No status file on the phone yet. Open 084x Blocker once, then run again." >&2; exit 1; }
+if ! fetch; then
+  echo "Could not copy the status file: $(grep -m1 'ERROR' "$work/copy.log" || tail -1 "$work/copy.log")" >&2
+  echo "Unlock the phone and run again. If it still fails, open 084x Blocker once: the file appears on first launch." >&2
+  exit 1
+fi
 cat "$work/status.json"; echo
