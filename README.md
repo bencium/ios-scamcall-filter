@@ -5,9 +5,9 @@ A private iPhone app that blocks whole ranges of phone numbers, not one number a
 This repository ships configured for UK scam ranges:
 
 - **On the phone:** every 0845 number, all 10 million of them. This part works with no internet connection.
-- **On your own small server:** 0843, 0844, 0870, 0871, 0872 and 0873, another 60 million numbers. The server can't see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
+- **On your own small server:** every number Ofcom has issued in 0840 to 0849 (except 0845) and 0870 to 0879, about 30 million, each stored as both `+44…` and `0…`. The server can't see which number is calling. See [Server lookup](#server-lookup-for-0843-0844-and-08700873).
 
-**70 million numbers in total.** To block other countries' ranges, or to run the server somewhere other than Fly.io, see [Other countries and other hosts](#other-countries-and-other-hosts). So far, real-call testing covers the UK 0845 list on the phone.
+**About 40 million numbers in total.** To block other countries' ranges, or to run the server somewhere other than Fly.io, see [Other countries and other hosts](#other-countries-and-other-hosts). So far, real-call testing covers the UK 0845 list on the phone.
 
 Your carrier may already label these calls "Suspected Spam" and still put them through. iOS can only block numbers one at a time, not a whole prefix. This app works around that by handing iOS the complete range.
 
@@ -91,7 +91,7 @@ You can run your own deployment from a clone of this public repository without p
 
 ## Server lookup for 0843, 0844 and 0870–0873
 
-**Status, 4 October 2026.** The server runs on Fly.io in London and passes the full number check. The list is generated straight from the prefixes: every number, allocated or not, with no reputation or allocation data. iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
+**Status, 5 October 2026.** On 5 October a real 0843 call rang through. The phone asked the server and got an answer within about a second, but the database held each number only as `+44843…`. UK networks often deliver the same number as `0843…`, and the lookup matches exact text. The database is now rebuilt from Ofcom's list of issued numbers, with each number in both forms. It passes the checks below on the Mac and is **not yet uploaded** to the server. Numbers Ofcom never issued are left out, because UK networks must block calls that show them. iOS accepted the lookup part on a free Apple account: the phone completed its setup with the trial server. **Not yet confirmed:** that a real call from these prefixes is silenced. Do not rely on it until that is checked.
 
 How it works:
 
@@ -106,13 +106,13 @@ Measured on the Mac with the full database:
 
 | Item | Value |
 |---|---|
-| Numbers | 60,000,000 (6 prefixes × 10 million) |
+| Numbers | 30,390,000 issued numbers × 2 forms = 60,780,000 entries |
 | Pieces (shards) | 8,192 |
 | Database on disk | 10 GB |
-| Server memory with everything loaded | 91 MB |
-| Build time on an M2 Pro | about 6 minutes |
-| Coverage check | every number of every prefix present once, none missing, none duplicated, nothing else |
-| One lookup, Mac as server and client | about 157 ms |
+| Server memory after 139 lookups | 110 MB |
+| Build time on an M2 Pro | about 9 minutes |
+| Coverage check | every issued number present once in each form, none missing, none duplicated, nothing else |
+| One lookup, Mac as server and client | about 120 ms |
 
 Cost ([Fly.io pricing](https://docs.fly.io/about/pricing)):
 
@@ -139,18 +139,18 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
 1. **Build the database** (about 6 minutes, needs about 14 GB free disk):
    ```sh
    export PATH="$HOME/.swiftpm/bin:$PATH"
-   scripts/lookup/build_db.sh /tmp/lookup-db 8192 0843 0844 0870 0871 0872 0873
+   scripts/lookup/build_db.sh /tmp/lookup-db 8192 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
    ```
-2. **Check exact coverage** of all 60 million entries (about 20 seconds):
+2. **Check exact coverage** of every entry:
    ```sh
-   python3 scripts/lookup/verify_coverage.py /tmp/lookup-db/merged 0843 0844 0870 0871 0872 0873
+   python3 scripts/lookup/verify_coverage.py /tmp/lookup-db 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
    ```
-   It must end with `COVERAGE EXACT`.
-3. **Check it with real lookups.** This needs the patched server binary (`server/dev.sh setup`, then `swift build -c release --product PIRService` in `server/upstream`) and the checker (`swift build -c release` in `scripts/lookup/checker`):
+   It must end with `COVERAGE EXACT`: every issued number once in each form, nothing else.
+3. **Check it with real lookups.** This needs the patched server binary (`server/dev.sh setup`, then `swift build -c release --product PIRService` in `server/upstream`; or set `PIRSERVICE` to one you built) and the checker (`swift build -c release` in `scripts/lookup/checker`):
    ```sh
-   scripts/lookup/check_db.sh /tmp/lookup-db/db 0843 0844 0870 0871 0872 0873
+   scripts/lookup/check_db.sh /tmp/lookup-db/db 0840 0841 0842 0843 0844 0846 0847 0848 0849 087
    ```
-   It must end with `ALL CORRECT`. It asks about the first, last and 25 random numbers of each prefix, and about the numbers just outside each prefix, which must stay allowed.
+   It must end with `ALL CORRECT`. It asks about the first, last and 25 random issued numbers of each prefix in five forms, and prints a table of what was blocked. `+44…` and `0…` must be blocked. The other forms, never-issued numbers next to the issued ones, 0845, a mobile and 0800 must stay allowed.
 4. **Create the Fly app** from the `server` folder. Pick your own app name; it becomes `https://<your-app>.fly.dev`:
    ```sh
    cd server
@@ -165,7 +165,7 @@ You need the four Apple PIR tools on your Mac: `ConstructDatabase`, `PIRService`
    fly machine update <machine id> --autostop=off --skip-health-checks --yes    # before
    fly machine update <machine id> --autostop=suspend --skip-health-checks --yes   # after
    ```
-6. **Check the live server:** `SERVER_URL=https://<your-app>.fly.dev TOKEN=<your token> scripts/lookup/check_db.sh - 0843 0844 0870 0871 0872 0873`
+6. **Check the live server:** `SERVER_URL=https://<your-app>.fly.dev TOKEN=<your token> S8=/tmp/lookup-db/s8.csv scripts/lookup/check_db.sh - 0840 0841 0842 0843 0844 0846 0847 0848 0849 087`
 7. **Rebuild the app:** `python3 scripts/create_project.py`, then build and install as in the setup steps above.
 8. **On the iPhone,** turn on **084x Blocker — Server lookup (0843, 0844, 087x)** in Settings > Apps > Phone > Call Blocking & Identification. If it isn't listed, restart the phone once.
 
@@ -185,7 +185,7 @@ Commit the patch files, then deploy with `scripts/deploy.sh`. It refuses unless 
 
 ### Other countries and other hosts
 
-**Any country's numbers.** The server matches full international numbers, so it isn't tied to the UK. Give the build script an international pattern in which each `x` is any digit. For example, `+1900xxxxxxx` covers 10 million US 900 numbers. UK prefixes like `0843` are shorthand for `+44843xxxxxxx`, and both can be mixed in one database:
+**Any country's numbers.** The server matches full international numbers, so it isn't tied to the UK. Give the build script an international pattern in which each `x` is any digit. For example, `+1900xxxxxxx` covers 10 million US 900 numbers. A UK prefix like `0843` stands for every number Ofcom has issued under it, in both forms (Ofcom's list covers numbers starting 08 only). Both kinds can be mixed in one database:
 
 ```sh
 scripts/lookup/build_db.sh /tmp/lookup-db 8192 0843 0844 +1900xxxxxxx
@@ -196,7 +196,7 @@ Each 10 million numbers adds about 1.8 GB of disk and no extra server memory. Th
 **Any host that runs a container.** This repository deploys to Fly.io, but `server/Dockerfile` is a standard container. It should run on Oracle Cloud (its Always Free tier can be set up in London), Google Cloud, AWS or a home server. It needs:
 
 - HTTPS on its own hostname: no custom port, no path, and a valid certificate
-- a persistent disk of about 13 GB for the 60-million-number database
+- a persistent disk of about 13 GB for the 61-million-entry database
 - about 256 MB of memory
 - the `LOOKUP_TOKEN` and `DASHBOARD_PASSWORD` secrets as environment variables, and `SHARD_COUNT` set to the shard count you built
 
