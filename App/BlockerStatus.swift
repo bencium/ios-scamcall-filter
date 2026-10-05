@@ -9,6 +9,7 @@ final class BlockerStatus: ObservableObject {
     @Published var accepted = Array(repeating: false, count: BlockerPlan.partCount)
     @Published var lookupEnabled = false
     @Published var busy = false
+    @Published private(set) var hasReadSwitches = false
     @Published var message = "Checking the iOS switches…"
     private let logger = Logger(subsystem: "uk.co.bencium.ScamBlocker", category: "Status")
     private let lookup = LiveCallerIDLookupManager.shared
@@ -29,6 +30,7 @@ final class BlockerStatus: ObservableObject {
             logger.notice("Part \(index + 1, privacy: .public) switch enabled=\(isEnabled, privacy: .public)")
         }
         enabled = states
+        hasReadSwitches = true
         for index in states.indices where !states[index] { accepted[index] = false }
         if BlockerPlan.usesServerLookup {
             lookupEnabled = lookup.status(forExtensionWithIdentifier: BlockerPlan.lookupID) == .enabled

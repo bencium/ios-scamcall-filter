@@ -23,6 +23,11 @@ enum BlockerPlan {
 #endif
     static let ids = (1...partCount).map(id(forPart:))
 
+    /// Numbers the phone blocks by itself, with no server.
+    static var numbersOnPhone: Int64 {
+        counts.reduce(0, +) + (usesServerLookup ? 0 : Int64(FallbackBlocks.allocated0843.count) * numbersPerBlock)
+    }
+
     /// Prefixes answered by the private lookup server; the phone holds no list for these.
     static let serverPrefixes = ["0843", "0844", "0870", "0871", "0872", "0873"]
     static let lookupID = "uk.co.bencium.ScamBlocker.Lookup"

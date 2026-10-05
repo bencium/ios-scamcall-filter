@@ -83,9 +83,10 @@ def sources(refs):
 
 project = add()
 app_refs = [source('App/ScamBlockerApp.swift'), source('App/BlockerView.swift'), source('App/BlockerStatus.swift'),
-            source('App/StatusFile.swift')]
+            source('App/StatusFile.swift'), source('App/ServerStats.swift'), source('App/StatsView.swift')]
 directory_ref = source('Blocker/CallDirectoryHandler.swift')
-lookup_refs = [source('Lookup/LookupExtension.swift'), source('Shared/LookupSecrets.swift')]
+secrets_ref = source('Shared/LookupSecrets.swift')
+lookup_refs = [source('Lookup/LookupExtension.swift'), secrets_ref]
 plan_refs = [source('Shared/BlockerPlan.swift'), source('Shared/FallbackBlocks.swift')]
 # The app icon lives in an asset catalog; scripts/make_icon.swift draws it.
 assets_ref = add(isa='PBXFileReference', lastKnownFileType='folder.assetcatalog',
@@ -143,6 +144,8 @@ def add_lookup_extension():
     lookup_token = setting('LOOKUP_TOKEN')
     if not lookup_url or not lookup_token:
         sys.exit('Set LOOKUP_URL and LOOKUP_TOKEN in .env (see README) before generating the project.')
+    if any(c in setting('DASHBOARD_PASSWORD') for c in '"\\'):
+        sys.exit('DASHBOARD_PASSWORD must not contain quotes or backslashes; the app embeds it in Swift source.')
     try:
         base64.b64decode(lookup_token, validate=True)
     except ValueError:
@@ -154,6 +157,7 @@ def add_lookup_extension():
         'enum LookupSecrets {',
         f'    static let url = URL(string: "{lookup_url}")!',
         f'    static let token = Data(base64Encoded: "{lookup_token}")!',
+        f'    static let dashboardPassword = "{setting("DASHBOARD_PASSWORD")}"',
         '}',
         '']))
     lookup_plist = {
@@ -183,7 +187,7 @@ app = add(isa='PBXNativeTarget', buildConfigurationList=configs({
     'PRODUCT_BUNDLE_IDENTIFIER': 'uk.co.bencium.ScamBlocker', 'INFOPLIST_FILE': 'App/Info.plist',
     'LD_RUNPATH_SEARCH_PATHS': '$(inherited) @executable_path/Frameworks',
     'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-}), buildPhases=[sources(app_refs + plan_refs), resources([assets_ref]), embed_directory]
+}), buildPhases=[sources(app_refs + plan_refs + ([] if fallback else [secrets_ref])), resources([assets_ref]), embed_directory]
     + ([embed_lookup] if lookup_embeds else []), buildRules=[],
     dependencies=dependencies, name='ScamBlocker', productName='ScamBlocker',
     productReference=app_product, productType='com.apple.product-type.application')

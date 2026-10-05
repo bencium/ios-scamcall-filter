@@ -2,11 +2,15 @@ import SwiftUI
 
 struct BlockerView: View {
     @StateObject private var status = BlockerStatus()
+    @StateObject private var stats = StatsModel()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink { StatsView(stats: stats, status: status) } label: { Text(protectionSummary) }
+                }
                 Section("Block incoming 0845 calls") {
                     Text("The full 0845 rule uses six smaller parts stored on this phone. All six must be enabled for the complete rule.")
                     if !BlockerPlan.usesServerLookup {
@@ -40,15 +44,26 @@ struct BlockerView: View {
             }
             .navigationTitle("084x Blocker")
             .task {
+                async let fetched: Void = stats.refresh()
                 await status.refresh()
+                await fetched
                 if ProcessInfo.processInfo.arguments.contains("--check-enabled") {
                     await status.reloadEnabled()
                 }
             }
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { Task { await status.refresh() } }
+                if phase == .active { Task { await status.refresh(); await stats.refresh() } }
             }
         }
+    }
+
+    private var protectionSummary: String {
+        guard status.hasReadSwitches else { return "Checking protection…" }
+        let complete = !status.enabled.contains(false) && (!BlockerPlan.usesServerLookup || status.lookupEnabled)
+        let summary = complete ? "Protection ON" : "Protection INCOMPLETE"
+        // Only a recent report says anything about this week.
+        guard let report = stats.stats?.phone, report.generatedAt.timeIntervalSinceNow > -2 * 86400 else { return summary }
+        return summary + ", \(report.blockedLast7Days) blocked this week"
     }
 
     private var serverLookupSection: some View {
