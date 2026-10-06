@@ -9,6 +9,8 @@ This repository ships configured for UK scam ranges:
 
 **About 40 million numbers in total.** To block other countries' ranges, or to run the server somewhere other than Fly.io, see [Other countries and other hosts](#other-countries-and-other-hosts). So far, real-call testing covers the UK 0845 list on the phone.
 
+**Two things decide whether a call is blocked.** iOS gives your server about one second to answer before it lets the phone ring, so the server runs all the time. And the network may send a caller's number as `0843…` or as `+44843…`, so the server stores both. Both were learned from real calls that got through; see [Lessons learned](BUILD-HISTORY-AND-HANDOVER.md#16-lessons-learned).
+
 Your carrier may already label these calls "Suspected Spam" and still put them through. iOS can only block numbers one at a time, not a whole prefix. This app works around that by handing iOS the complete range.
 
 ## Quick start with Claude Code or Codex

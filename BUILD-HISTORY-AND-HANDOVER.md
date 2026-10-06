@@ -4,6 +4,8 @@ Last updated: 4 October 2026 (section 15 added). Sections 1–14 date from 29 Se
 
 ## 1. Current result
 
+**Read section 16 first.** It lists what real calls taught on 5 and 6 October: iOS gives the server about one second, and numbers must be stored in both forms.
+
 We built, signed and installed a private iPhone app that submits the complete standard UK 0845 number range to Apple's Call Directory system through six extensions. iOS accepted all six submissions on 28 September, and a later check on 29 September found all six switches enabled.
 
 **The user's requirement has not been demonstrated as working.** On 29 September the user reported an unwanted call from `0845 xxx xxxx`. The phone's call signalling shows the caller was actually `0845 xxx xxxx`. Both are in Part 1. The captured logs at that time show iOS choosing silencing and Live Voicemail rather than rejecting the call. No root cause or verified repair has been established.
@@ -563,3 +565,17 @@ The user shared an alternative plan: generate the list from editable prefix rule
 2. The user runs `! fly auth login`. Then follow README "Server lookup", steps 3–7, with a fresh token.
 3. Run `check_db.sh`-style checks against the live URL, then rebuild the app with the live `.env` values and reinstall.
 4. Validate on real calls the same way as section 13, step 5. Also check that a contact still rings with no delay.
+
+## 16. Lessons learned
+
+These came from real calls that rang through on 5 and 6 October 2026. Each one was missed by checks that passed.
+
+1. **iOS gives the server about one second.** When an unknown caller rings, iOS asks the server whether to block, and waits about 1 second. Then it gives up and lets the phone ring. The phone's log on 6 October: "Timeout occured waiting for LiveLookup Blocking information" 1.006 s after the call arrived; the server's "block" answer came 15 ms later. The limit comes from Apple's settings on the phone ("server bag" default), so nothing the server sends can extend it, and adding delay only makes things worse. Everything must fit inside that second: waking the server, the phone's lookup process starting up, fetching access tokens, and the query itself. Waking from Fly's suspend took 0.8 s on its own. **So the server runs all the time.** About $2.48 a month, on a one-month trial until about 6 November 2026.
+2. **Store every number in the forms the network delivers.** The lookup matches exact text. UK networks deliver the same caller as `0843…` or as `+44843…`. This phone's own call history showed it, with 377 of 443 incoming calls stored as `0…`. The database held only `+44843…`, so 0843 calls rang. It now holds both.
+3. **A check must ask the way the phone asks.** `check_db.sh` asked only in the `+44` form and only measured server time, so it passed while real calls failed. Before calling anything done, compare the check with real evidence: the call history for number forms, and the phone's log for timing.
+4. **The phone's log is the only proof of what iOS did.** The server can't see its own answers, and its logs show only that a question arrived. To read the phone's side, run `sudo log collect --device-udid "$(scripts/phone_device.sh)" --start "YYYY-MM-DD HH:MM:00" --output /tmp/phone-call.logarchive` in a real Terminal (sudo needs a password prompt). Then use `/usr/bin/log show`; in zsh, plain `log` is a shell built-in. Look for `callservicesd` lines with "live blocking info" or "shouldBlock".
+5. **Block what Ofcom lists, and re-check monthly.** Writing every possible number in several forms would have meant 120 to 300 million entries. Ofcom's list of issued and opened blocks keeps both forms at about 63 million, the size the server already had. Blocks Ofcom opens later are caught by the monthly check (`scripts/schedule_ofcom_check.sh`).
+6. **Smaller tooling lessons.**
+   - Pick only a phone that is actually connected. A paired but absent phone swallowed an hour of installs.
+   - Never edit a shell script while it runs.
+   - A deploy leaves the Fly machine stopped, so the first request after it takes 4.7 s.
