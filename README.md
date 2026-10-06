@@ -119,18 +119,18 @@ Cost ([Fly.io pricing](https://docs.fly.io/about/pricing)):
 | Item | Monthly cost |
 |---|---|
 | 13 GB disk, billed all the time | about $1.95 |
-| 256 MB machine, if it ran all the time | about $2.50 |
-| 256 MB machine with auto-suspend | only while awake; asleep it costs storage only |
+| 256 MB machine, always on (London) | about $2.48 (checked 6 October 2026) |
 
-The machine suspends itself after about 5 to 7 minutes without lookups and resumes on the next one. Measured on the live server:
+**The machine stays awake all the time, because iOS waits only about 1 second.** On 6 October the phone's own log showed iOS giving up 1.006 seconds after a call arrived ("Timeout occured waiting for LiveLookup Blocking information") and letting it ring. The server's "block" answer arrived 15 ms later: waking from suspend had taken 0.8 s of that second. The limit comes from Apple's settings on the phone; the server can't change it. Measured on the live server:
 
 | Situation | One lookup |
 |---|---|
-| Machine awake | 171 ms |
-| Woken from suspend | 945 ms |
-| Woken from a full stop | 4.7 s |
+| Machine awake | 171–194 ms |
+| Awake, complete first lookup including setup | 404–636 ms |
+| Woken from suspend | 945 ms, often too slow |
+| Woken from a full stop | 4.7 s, always too slow |
 
-Suspend is used rather than stop because of that difference. If Fly ever loses the suspended snapshot, for example during maintenance, the next call gets the slower full start. Apple doesn't document how long iOS waits for the answer before ringing.
+Sleep-when-idle (`auto_stop_machines = "suspend"`) would save about $2.30 a month, but calls that arrive while it sleeps ring through.
 
 ### Setting it up
 
@@ -216,7 +216,7 @@ Each 10 million numbers adds about 1.8 GB of disk and no extra server memory. Th
 - about 256 MB of memory
 - the `LOOKUP_TOKEN` and `DASHBOARD_PASSWORD` secrets as environment variables, and `SHARD_COUNT` set to the shard count you built
 
-Fly's sleep-when-idle mode is specific to Fly. On other hosts the server normally runs all the time. After moving, set `LOOKUP_URL` in `.env` to the new address and rebuild the app. Only Fly.io has been tested.
+Any host must answer within iOS's 1-second limit, so the server has to run all the time. After moving, set `LOOKUP_URL` in `.env` to the new address and rebuild the app. Only Fly.io has been tested.
 
 ### Free trial with the Mac as the server
 
@@ -284,7 +284,7 @@ The upload contains counts, plus the numbers of blocked calls for the dashboard 
 
 The line at the top of the app says whether protection is on: all six 0845 parts and the server lookup. If the Mac's call report is recent, it also shows how many calls were blocked this week. Tap it for the Details screen:
 
-- **Server:** how fast it answered just now (about 1 s means it was asleep), when it started, unknown callers checked in the last 24 hours and 7 days, the last one, and errors.
+- **Server:** how fast it answered just now (about 1 s means it was asleep, too slow for iOS), when it started, unknown callers checked in the last 24 hours and 7 days, the last one, and errors.
 - **Numbers blocked:** on the server, from the Mac's notes, and on the phone, plus the last Ofcom check.
 - **Blocked calls:** counts and the last five numbers, from the Mac's call report. Only that report knows which calls were blocked: iOS doesn't tell apps, and the server never sees its own answers. The screen says how old the report is.
 - **Phone:** the switches and the re-sign date, read from the app's own signing profile.

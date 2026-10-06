@@ -536,6 +536,20 @@ The user shared an alternative plan: generate the list from editable prefix rule
 - **Another unknown caller at 20:37 BST,** after the new database went live. Not known whether it was 084x or whether it rang.
 - **Installed at 22:00 BST,** after an hour of failed attempts. `phone_device.sh` picked "the first paired iPhone", and once the Mac's device list order changed, that was another iPhone paired with this Mac but not connected. Every install went to that phone and failed as "locked", "usage assertion" (4016) or "disk image could not be mounted" (12040). A phone restart, a replug, a device-service restart and stopping Fly's agent did not help. The tool's own output finally showed the target phone's name. The device report also wrongly said Developer Mode was off, while the app opened fine. Fixed: the script now picks only a connected phone and refuses when several are connected (set `DEVICE_ID` in `.env`). Side effect: the unpair attempt removed this Mac's pairing with that other phone, so it will ask "Trust This Computer?" next time it is connected. After the install: 6 of 6 parts on, server lookup on.
 
+### iOS waits about 1 second: server always on (6 October 2026)
+
+- **What happened.** At 08:44 BST a call from a listed 0843 number rang. The live database blocked that number in both forms.
+- **The phone's own log** (`sudo log collect --device-udid ...` in a real Terminal, then `/usr/bin/log show`; in zsh, plain `log` is a shell built-in) showed the timeline:
+  - At 08:44:50.170, callservicesd started "Checking live blocking info". The time limit came from Apple's server bag default.
+  - ciphermld started cold and had no token cache.
+  - At 08:44:51.176: "Timeout occured waiting for LiveLookup Blocking information", block=NO, so the phone rang.
+  - The queries-batch response arrived at 08:44:51.191, 15 ms later.
+  - The first server request took 806 ms, mostly waking from suspend. Fly's logs: "Machine started in 561ms".
+- **Changed at the user's request, as a one-month trial until about 6 November 2026:** the machine is always on, set with `fly machine update --autostop=off`, and `auto_stop_machines = "off"` with `min_machines_running = 1` in `fly.toml` and `fly.example.toml`. Cost about $2.48/month: Fly's $2.19 base price × 1.13 for lhr, from Fly's pricing page on 6 October.
+- **Awake, from the Mac:** a complete first lookup takes 404–636 ms and later lookups 174–194 ms. The phone's path skips the key upload.
+- **Adding delay on the server cannot help.** The phone sets the limit; it doesn't come from anything the server sends.
+- **Not yet proven:** a real 084x call silenced with the server awake. Still unknown: how often the phone's ciphermld starts cold, and how much mobile data adds compared with Wi-Fi.
+
 ### Not yet verified
 
 1. **A real lookup from the phone.** The handshake worked (see above). No `/queries` request has arrived yet, because no unknown call has come in. The app's profile expires 11 October 2026.
